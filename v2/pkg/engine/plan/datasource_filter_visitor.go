@@ -1,0 +1,1293 @@
+package plan
+
+import (
+	"cmp"
+	"slices"
+
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/ast"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/operationreport"
+)
+
+const typeNameField = "__typename"
+
+var typeNameFieldBytes = []byte(typeNameField)
+
+type DataSourceFilter struct {
+	operation  *ast.Document
+	definition *ast.Document
+	report     *operationreport.Report
+
+	nodes *NodeSuggestions
+
+	enableSelectionReasons bool
+
+	fieldDependsOn       map[int][]int
+	newFieldRefs         map[int]struct{}
+	unfetchableFieldRefs map[int]struct{}
+	dataSources          []DataSource
+
+	// allowFallbackKeyJumps allows assigning fallback (subset -> compound key) jumps as requiresKey.
+	// It is disabled on the initial selection runs: when regular planning fails on a node
+	// reachable only via a fallback jump, the node is marked with requiresFallbackKey,
+	// nodesResolvableVisitor reports it as unresolved, and NodeSelectionBuilder
+	// enables this flag and refilters the datasources (see NodeSelectionBuilder.SelectNodes).
+	allowFallbackKeyJumps   bool
+	jumpsForPathForTypename map[KeyIndex]*DataSourceJumpsGraph
+	dsHashesHavingKeys      map[DSHash]struct{}
+
+	maxDataSourceCollectorsConcurrency uint
+	nodesCollector                     *nodesCollector
+}
+
+func NewDataSourceFilter(operation, definition *ast.Document, report *operationreport.Report, dataSources []DataSource, newFieldRefs map[int]struct{}) *DataSourceFilter {
+	return &DataSourceFilter{
+		operation:    operation,
+		definition:   definition,
+		report:       report,
+		dataSources:  dataSources,
+		nodes:        NewNodeSuggestions(),
+		newFieldRefs: newFieldRefs,
+	}
+}
+
+func (f *DataSourceFilter) EnableSelectionReasons() {
+	f.enableSelectionReasons = true
+}
+
+func (f *DataSourceFilter) EnableFallbackKeyJumps() {
+	f.allowFallbackKeyJumps = true
+}
+
+// WithMaxDataSourceCollectorsConcurrency sets the maximum number of concurrent data source collectors
+func (f *DataSourceFilter) WithMaxDataSourceCollectorsConcurrency(maxConcurrency uint) *DataSourceFilter {
+	f.maxDataSourceCollectorsConcurrency = maxConcurrency
+	return f
+}
+
+// WithUnfetchableFieldRefs sets the field refs which must not be planned on any datasource
+func (f *DataSourceFilter) WithUnfetchableFieldRefs(unfetchableFieldRefs map[int]struct{}) *DataSourceFilter {
+	f.unfetchableFieldRefs = unfetchableFieldRefs
+	return f
+}
+
+func (f *DataSourceFilter) FilterDataSources(landedTo map[int]DSHash, fieldDependsOn map[int][]int) (used []DataSource, suggestions *NodeSuggestions) {
+	var dsInUse map[DSHash]struct{}
+
+	f.fieldDependsOn = fieldDependsOn
+
+	suggestions, dsInUse = f.findBestDataSourceSet(landedTo)
+	if f.report.HasErrors() {
+		return
+	}
+
+	used = make([]DataSource, 0, len(dsInUse))
+	for i := range f.dataSources {
+		_, inUse := dsInUse[f.dataSources[i].Hash()]
+		if inUse {
+			used = append(used, f.dataSources[i])
+		}
+	}
+
+	return used, suggestions
+}
+
+func (f *DataSourceFilter) findBestDataSourceSet(landedTo map[int]DSHash) (*NodeSuggestions, map[DSHash]struct{}) {
+	f.collectNodes()
+	if f.report.HasErrors() {
+		return nil, nil
+	}
+
+	// f.nodes.printNodes("initial nodes")
+	f.applyLandedTo(landedTo) // FAILING TEST IF REMOVE: single key - double key - double key - single key
+
+	f.selectUniqueNodes()
+	f.selectDuplicateNodes(false)
+	f.selectDuplicateNodes(true)
+
+	uniqueDataSourceHashes := f.nodes.populateHasSuggestions()
+
+	// add ds hashes from the keys
+	for dsHash := range f.dsHashesHavingKeys {
+		uniqueDataSourceHashes[dsHash] = struct{}{}
+	}
+
+	return f.nodes, uniqueDataSourceHashes
+}
+
+func (f *DataSourceFilter) applyLandedTo(landedTo map[int]DSHash) {
+	if landedTo == nil {
+		return
+	}
+
+	for fieldRef, dsHash := range landedTo {
+		treeNodeID := TreeNodeID(fieldRef)
+
+		node, ok := f.nodes.responseTree.Find(treeNodeID)
+		if !ok {
+			// no such node in the tree
+			// we may removed it as orphaned
+			continue
+		}
+
+		nodeData := node.GetData()
+		for _, itemID := range nodeData {
+			if f.nodes.items[itemID].DataSourceHash == dsHash {
+				f.nodes.items[itemID].unselect()
+				// we need to select this node
+				f.nodes.items[itemID].selectWithReason(ReasonKeyRequirementProvidedByPlanner, f.enableSelectionReasons)
+				f.nodes.items[itemID].IsRequiredKeyField = true
+			} else if f.nodes.items[itemID].Selected {
+
+				// we need to unselect this node as we are changing initial node selection when we had less information
+				// but in case there are any selected child nodes - selection should be untouched
+				hasSelectedChildNodes := false
+				if childNodes := f.nodes.childNodesOnSameSource(itemID); childNodes != nil {
+					for _, childID := range childNodes {
+						if f.nodes.items[childID].Selected {
+							hasSelectedChildNodes = true
+						}
+					}
+				}
+				if !hasSelectedChildNodes {
+					f.nodes.items[itemID].unselect()
+				}
+
+			}
+		}
+	}
+
+}
+
+// collectNodes collects and organizes information about
+// which data sources (subgraphs) can resolve each field and
+// builds a "jump graph" to enable navigation between data sources using federation @key directives.
+func (f *DataSourceFilter) collectNodes() {
+	if f.nodesCollector == nil {
+		f.nodesCollector = &nodesCollector{
+			operation:            f.operation,
+			definition:           f.definition,
+			dataSources:          f.dataSources,
+			nodes:                f.nodes,
+			report:               f.report,
+			maxConcurrency:       f.maxDataSourceCollectorsConcurrency,
+			seenKeys:             make(map[SeenKeyPath]struct{}),
+			fieldInfo:            make(map[int]fieldInfo),
+			newFieldRefs:         f.newFieldRefs,
+			unfetchableFieldRefs: f.unfetchableFieldRefs,
+		}
+
+		f.nodesCollector.initVisitors()
+	}
+
+	keysInfo := f.nodesCollector.CollectNodes()
+
+	if f.dsHashesHavingKeys == nil {
+		f.dsHashesHavingKeys = make(map[DSHash]struct{})
+	}
+
+	keysForPathForTypename := make(map[KeyIndex]map[DSHash][]KeyInfo)
+	for _, keyInfo := range keysInfo {
+		keyIndex := KeyIndex{keyInfo.Path, keyInfo.TypeName}
+		keysPerDS, ok := keysForPathForTypename[keyIndex]
+		if !ok {
+			keysPerDS = make(map[DSHash][]KeyInfo)
+		}
+
+		keysPerDS[keyInfo.DSHash] = keyInfo.Keys
+		keysForPathForTypename[keyIndex] = keysPerDS
+
+		f.dsHashesHavingKeys[keyInfo.DSHash] = struct{}{}
+	}
+
+	if f.jumpsForPathForTypename == nil {
+		f.jumpsForPathForTypename = make(map[KeyIndex]*DataSourceJumpsGraph)
+	}
+
+	usedDsHashes := make([]DSHash, 0, len(f.dsHashesHavingKeys))
+	// iterate over datasources to have a deterministic order
+	for _, ds := range f.dataSources {
+		if _, ok := f.dsHashesHavingKeys[ds.Hash()]; ok {
+			usedDsHashes = append(usedDsHashes, ds.Hash())
+		}
+	}
+
+	for keyIndex, keysPerDS := range keysForPathForTypename {
+		f.jumpsForPathForTypename[KeyIndex{Path: keyIndex.Path, TypeName: keyIndex.TypeName}] = NewDataSourceJumpsGraph(usedDsHashes, keysPerDS, keyIndex.TypeName)
+	}
+}
+
+const (
+	ReasonStage1Unique           = "stage1: unique"
+	ReasonStage1SameSourceParent = "stage1: same source parent of unique node"
+
+	ReasonStage2SameSourceNodeOfSelectedParent  = "stage2: node on the same source as selected parent"
+	ReasonStage2SameSourceNodeOfSelectedChild   = "stage2: node on the same source as selected child"
+	ReasonStage2SameSourceNodeOfSelectedSibling = "stage2: node on the same source as selected sibling"
+
+	ReasonStage3SelectAvailableLeafNode                        = "stage3: select first available leaf node"
+	ReasonStage3SelectNodeHavingPossibleChildsOnSameDataSource = "stage3: select non leaf node which have possible child selections on the same source"
+	ReasonStage3SelectFirstAvailableRootNode                   = "stage3: first available root node"
+	ReasonStage3SelectParentRootNodeWithEnabledEntityResolver  = "stage3: first available parent node with enabled entity resolver"
+	ReasonStage3SelectNodeUnderFirstParentRootNode             = "stage3: node under first available parent node"
+	ReasonStage3SelectParentNodeWhichCouldGiveKeys             = "stage3: select parent node which could provide keys for the child node"
+
+	ReasonKeyRequirementProvidedByPlanner = "provided by planner as required by @key"
+	ReasonProvidesProvidedByPlanner       = "@provides"
+)
+
+// selectUniqueNodes - selects nodes (e.g. fields) which are unique to a single datasource
+func (f *DataSourceFilter) selectUniqueNodes() {
+
+	for i := range f.nodes.items {
+		if f.nodes.items[i].IsOrphan {
+			continue
+		}
+
+		if f.nodes.items[i].Selected {
+			continue
+		}
+
+		if !f.nodes.isNodeUnique(i) {
+			continue
+		}
+
+		// unique nodes always have priority
+		f.nodes.items[i].selectWithReason(ReasonStage1Unique, f.enableSelectionReasons)
+
+		f.selectUniqNodeParentsUpToRootNode(i)
+	}
+}
+
+func (f *DataSourceFilter) selectUniqNodeParentsUpToRootNode(i int) {
+	// When we have a chain of datasource child nodes, we should select every parent until we reach the root node
+	// as a root node is a starting point from where we could get all these child nodes
+
+	if f.nodes.items[i].IsRootNode {
+		// no need to select the parent of a root node here
+		// as it could be resolved by itself
+		return
+	}
+
+	rootNodeFound := false
+	nodesIdsToSelect := make([]int, 0, 2)
+	current := i
+	for {
+		parentIdx, ok := f.nodes.parentNodeOnSameSource(current)
+		if !ok {
+			break
+		}
+		nodesIdsToSelect = append(nodesIdsToSelect, parentIdx)
+
+		if f.nodes.items[parentIdx].IsExternal && !f.nodes.items[i].IsProvided {
+			// parent can't be selected because it is fully external
+			// we will have to find another way to get to this node
+			break
+		}
+
+		// if parent node returns union type and it is shareable - not unique, we should not select it here
+		if f.nodes.items[parentIdx].hasUnionReturnType && !f.nodes.isNodeUnique(parentIdx) {
+			break
+		}
+
+		// TODO: there could be a potential situation when we have selected root node with enabled entity resolver,
+		// but we can't jump to it because no parent could provide a key for it
+		// Need to consider how to move this logic into the selection process of duplicated nodes maybe?
+
+		if f.nodes.items[parentIdx].IsRootNode && !f.nodes.items[parentIdx].DisabledEntityResolver {
+			rootNodeFound = true
+			break
+		}
+
+		current = parentIdx
+	}
+
+	if !rootNodeFound {
+		return
+	}
+
+	for _, parentIdx := range nodesIdsToSelect {
+		f.nodes.items[parentIdx].selectWithReason(ReasonStage1SameSourceParent, f.enableSelectionReasons)
+	}
+}
+
+// hasPathBetweenDs returns the best key jump path between two datasources.
+// Preference order: direct exact-key path, shortest indirect exact-key path,
+// and only then paths using fallback (subset -> compound key) jumps - a fallback jump
+// requires extra gather fetches for the missing key members, so it is always the last resort.
+// Fallback paths are present in possiblePaths only when includeFallback is true.
+func hasPathBetweenDs(jumps *DataSourceJumpsGraph, from, to DSHash, includeFallback bool) (bestPath *SourceConnection, exists bool) {
+	// An exact key path always wins over a fallback one, so ask for the exact paths first:
+	// enumerating the fallback-inclusive paths - which is much more expensive because
+	// fallback edges densify the jump graph - is only needed when no exact path exists.
+	possiblePaths, exists := jumps.getPaths(from, to, false)
+	if !exists && includeFallback {
+		possiblePaths, exists = jumps.getPaths(from, to, true)
+	}
+	if !exists {
+		return nil, false
+	}
+
+	// The paths are classified along two axes:
+	// direct (a single key jump) vs indirect (a chain of key jumps
+	// via intermediate datasources), and exact (every jump key is fully
+	// satisfiable by its source datasource) vs fallback (at least one jump uses
+	// a subset -> compound key and has to gather the missing key members first).
+	var exactDirectPaths []SourceConnection
+	var exactIndirectPaths []SourceConnection
+	var fallbackDirectPaths []SourceConnection
+	var fallbackIndirectPaths []SourceConnection
+
+	for _, path := range possiblePaths {
+		if sourceConnectionUsesFallback(path) {
+			if path.Type == SourceConnectionTypeDirect {
+				fallbackDirectPaths = append(fallbackDirectPaths, path)
+				continue
+			}
+			fallbackIndirectPaths = append(fallbackIndirectPaths, path)
+			continue
+		}
+
+		if path.Type == SourceConnectionTypeDirect {
+			exactDirectPaths = append(exactDirectPaths, path)
+			continue
+		}
+		exactIndirectPaths = append(exactIndirectPaths, path)
+	}
+
+	if len(exactDirectPaths) > 0 {
+		return &exactDirectPaths[0], true
+	}
+
+	// TODO: indirect path should take into consideration existing nodes?
+
+	if bestPath := shortestConnection(exactIndirectPaths); bestPath != nil {
+		return bestPath, true
+	}
+
+	if bestPath := bestFallbackConnection(fallbackDirectPaths); bestPath != nil {
+		return bestPath, true
+	}
+
+	if bestPath := bestFallbackConnection(fallbackIndirectPaths); bestPath != nil {
+		return bestPath, true
+	}
+
+	return nil, false
+}
+
+func shortestConnection(paths []SourceConnection) *SourceConnection {
+	var bestPath *SourceConnection
+
+	for _, path := range paths {
+		if bestPath == nil {
+			bestPath = &path
+			continue
+		}
+
+		if len(path.Jumps) < len(bestPath.Jumps) {
+			bestPath = &path
+		}
+	}
+
+	return bestPath
+}
+
+// bestFallbackConnection returns the cheapest connection using fallback jumps:
+// the fewest jumps first, and among connections with the same number of jumps -
+// the fewest missing key members to gather (every missing member costs an extra
+// gather fetch from a third datasource). The first connection wins ties, keeping
+// the selection deterministic (jumps are recorded in key appearance order).
+func bestFallbackConnection(paths []SourceConnection) *SourceConnection {
+	var bestPath *SourceConnection
+	var bestMissing int
+
+	for _, path := range paths {
+		missing := fallbackMissingKeyMembers(path)
+		if bestPath == nil ||
+			len(path.Jumps) < len(bestPath.Jumps) ||
+			(len(path.Jumps) == len(bestPath.Jumps) && missing < bestMissing) {
+			bestPath = &path
+			bestMissing = missing
+		}
+	}
+
+	return bestPath
+}
+
+// fallbackMissingKeyMembers returns the total number of target key members which
+// the fallback jumps of the connection cannot provide from their source datasources
+// (see KeyJump.SourcePaths).
+func fallbackMissingKeyMembers(path SourceConnection) (missing int) {
+	for _, jump := range path.Jumps {
+		if jump.Fallback {
+			missing += len(jump.FieldPaths) - len(jump.SourcePaths)
+		}
+	}
+
+	return missing
+}
+
+// sourceConnectionUsesFallback reports whether any jump of the path
+// is a fallback (subset -> compound key) jump.
+func sourceConnectionUsesFallback(path SourceConnection) bool {
+	for _, jump := range path.Jumps {
+		if jump.Fallback {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (f *DataSourceFilter) jumpsForPathAndTypeName(path string, typeName string) (*DataSourceJumpsGraph, bool) {
+	jumpsForTypename, exists := f.jumpsForPathForTypename[KeyIndex{Path: path, TypeName: typeName}]
+	if !exists {
+		return nil, false
+	}
+
+	return jumpsForTypename, true
+}
+
+func (f *DataSourceFilter) assignKeys(itemIdx int, parentNodeIndexes []int) {
+	currentNode := f.nodes.items[itemIdx]
+
+	if currentNode.requiresKey != nil {
+		return
+	}
+
+	currentNodeDsHash := currentNode.DataSourceHash
+	currentNodeTypeName := currentNode.TypeName
+
+	selectedParentHashes := make([]DSHash, 0, len(parentNodeIndexes))
+	unselectedParentIndexes := make([]int, 0, len(parentNodeIndexes))
+	hasSelectedParentOnSameDataSource := false
+
+	for _, parentIdx := range parentNodeIndexes {
+		if !f.nodes.items[parentIdx].Selected {
+			unselectedParentIndexes = append(unselectedParentIndexes, parentIdx)
+			continue
+		}
+
+		if f.nodes.items[parentIdx].DataSourceHash == currentNodeDsHash {
+			hasSelectedParentOnSameDataSource = true
+			break
+		}
+
+		selectedParentHashes = append(selectedParentHashes, f.nodes.items[parentIdx].DataSourceHash)
+	}
+
+	if hasSelectedParentOnSameDataSource {
+		return
+	}
+
+	jumpsForTypename, exists := f.jumpsForPathAndTypeName(currentNode.ParentPath, currentNodeTypeName)
+	if !exists {
+		return
+	}
+
+	for _, selectedParentHash := range selectedParentHashes {
+		path, exists := hasPathBetweenDs(jumpsForTypename, selectedParentHash, currentNodeDsHash, f.allowFallbackKeyJumps)
+		if exists {
+			currentNode.requiresKey = path
+			currentNode.requiresFallbackKey = false
+			return
+		}
+
+		if f.allowFallbackKeyJumps {
+			continue
+		}
+
+		// No exact key path exists from this parent. If a fallback (subset -> compound key)
+		// path would work, do not assign it right away - fallback jumps are allowed
+		// only when regular planning fails. Instead mark the node with requiresFallbackKey:
+		// nodesResolvableVisitor will report it as unresolved, and NodeSelectionBuilder
+		// will refilter the datasources with fallback key jumps enabled.
+		fallbackPath, fallbackExists := hasPathBetweenDs(jumpsForTypename, selectedParentHash, currentNodeDsHash, true)
+		if !fallbackExists {
+			continue
+		}
+		if !sourceConnectionUsesFallback(*fallbackPath) {
+			continue
+		}
+		if sourceConnectionRequiresMissingFallbackKeyField(fallbackPath, currentNode) {
+			continue
+		}
+		currentNode.requiresFallbackKey = true
+	}
+
+	if len(selectedParentHashes) == 0 {
+		// no parent is selected yet - the node will be revisited on the next run
+		return
+	}
+
+	// None of the selected parents' datasources could provide a key for the jump
+	// to the current node's datasource, but a not yet selected parent duplicate could,
+	// e.g. when the key field is resolvable only from a sibling subgraph.
+	// Select such a parent in addition and route the key jump through it.
+	parentIdx, path, ok := f.firstReachableKeyProvidingParent(jumpsForTypename, currentNodeDsHash, unselectedParentIndexes)
+	if !ok {
+		return
+	}
+
+	if !f.selectWithExternalCheck(parentIdx, ReasonStage3SelectParentNodeWhichCouldGiveKeys) {
+		// cannot happen: the candidate filter mirrors the external check
+		return
+	}
+
+	currentNode.requiresKey = path
+	currentNode.requiresFallbackKey = false
+
+	// the newly selected parent may itself require a key to be reachable
+	f.assignKeys(parentIdx, f.nodes.treeNode(parentIdx).GetParent().GetData())
+}
+
+// firstReachableKeyProvidingParent returns the first not yet selected parent duplicate
+// which could provide a key jump into the current node's datasource. The parent has to
+// be reachable on its own datasource as well (see canAssignKeys) - otherwise the extra
+// selection produces a fetch which cannot be rooted anywhere and degenerates into an
+// invalid root query fetch (e.g. a parent inside a keyless non-entity value type chain
+// on a datasource without the corresponding root query field). The selection has no
+// undo, so reachability is a precondition of the candidate, not a post-hoc repair.
+// The filter is shared by assignKeys' sibling-parent fallback and canAssignKeys.
+func (f *DataSourceFilter) firstReachableKeyProvidingParent(jumpsForTypename *DataSourceJumpsGraph, currentNodeDsHash DSHash, unselectedParentIndexes []int) (parentIdx int, path *SourceConnection, ok bool) {
+	for _, parentIdx := range unselectedParentIndexes {
+		parentNode := f.nodes.items[parentIdx]
+
+		if parentNode.IsOrphan || parentNode.DataSourceHash == currentNodeDsHash {
+			continue
+		}
+
+		if parentNode.IsExternal && !parentNode.IsProvided {
+			// selectWithExternalCheck would refuse this parent
+			continue
+		}
+
+		path, exists := hasPathBetweenDs(jumpsForTypename, parentNode.DataSourceHash, currentNodeDsHash, f.allowFallbackKeyJumps)
+		if !exists {
+			continue
+		}
+
+		parentTreeNode := f.nodes.treeNode(parentIdx)
+		if !f.canAssignKeys(parentIdx, parentTreeNode.GetParent().GetData()) {
+			continue
+		}
+
+		return parentIdx, path, true
+	}
+
+	return 0, nil, false
+}
+
+// canAssignKeys reports whether assignKeys would be able to route the node at itemIdx
+// to its datasource: it already has a key, or it is nested under a selected parent on
+// the same datasource, or a selected parent's datasource provides a key jump, or -
+// recursively - a not yet selected parent duplicate could provide the key while being
+// reachable itself. It mirrors the decision paths of assignKeys without mutating state,
+// and is used as the precondition for the sibling-parent fallback selection.
+func (f *DataSourceFilter) canAssignKeys(itemIdx int, parentNodeIndexes []int) bool {
+	currentNode := f.nodes.items[itemIdx]
+
+	if currentNode.requiresKey != nil {
+		return true
+	}
+
+	currentNodeDsHash := currentNode.DataSourceHash
+
+	if len(parentNodeIndexes) == 0 {
+		// the node is at the operation root - it is fetchable directly
+		// only when its field is a root node of its datasource
+		return currentNode.IsRootNode
+	}
+
+	selectedParentHashes := make([]DSHash, 0, len(parentNodeIndexes))
+	unselectedParentIndexes := make([]int, 0, len(parentNodeIndexes))
+	for _, parentIdx := range parentNodeIndexes {
+		if !f.nodes.items[parentIdx].Selected {
+			unselectedParentIndexes = append(unselectedParentIndexes, parentIdx)
+			continue
+		}
+
+		if f.nodes.items[parentIdx].DataSourceHash == currentNodeDsHash {
+			// nested under a selected parent on the same datasource
+			return true
+		}
+
+		selectedParentHashes = append(selectedParentHashes, f.nodes.items[parentIdx].DataSourceHash)
+	}
+
+	jumpsForTypename, exists := f.jumpsForPathAndTypeName(currentNode.ParentPath, currentNode.TypeName)
+	if !exists {
+		return false
+	}
+
+	for _, selectedParentHash := range selectedParentHashes {
+		if _, exists := hasPathBetweenDs(jumpsForTypename, selectedParentHash, currentNodeDsHash, f.allowFallbackKeyJumps); exists {
+			return true
+		}
+	}
+
+	if len(selectedParentHashes) == 0 {
+		return false
+	}
+
+	_, _, reachable := f.firstReachableKeyProvidingParent(jumpsForTypename, currentNodeDsHash, unselectedParentIndexes)
+	return reachable
+}
+
+// selectDuplicateNodes - selects nodes (e.g. fields) which are not unique to a single datasource,
+// e.g. could be resolved by multiple datasources
+// This method checks only nodes not already selected on the other datasource
+// On a first run we are doing set of checks of surrounding nodes selection for the current analyzed node and each of its duplicates:
+//   - check for selected parent of a current node or its duplicates
+//   - check for selected childs of a current node or its duplicates
+//   - check for selected siblings of a current node or its duplicates
+//
+// On a second run in additional to all the checks from the first run
+// we select nodes which was not chosen by previous stages, so we just pick first available datasource
+func (f *DataSourceFilter) selectDuplicateNodes(secondPass bool) {
+	for id, treeNode := range TraverseBFS(f.nodes.responseTree) {
+		// f.nodes.printNodes("nodes")
+		// fmt.Println()
+
+		if id == treeRootID {
+			continue
+		}
+
+		itemIDs := treeNode.GetData()
+		if len(itemIDs) == 0 {
+			// no available nodes to select
+			continue
+		}
+
+		if len(itemIDs) == 1 {
+			// such node already selected as unique
+
+			parentNodeIndexes := treeNode.GetParent().GetData()
+
+			f.assignKeys(itemIDs[0], parentNodeIndexes)
+			continue
+		}
+
+		if !secondPass && f.nodes.items[itemIDs[0]].isTypeName {
+			// we want to select typename only after some fields were selected
+			continue
+		}
+
+		// if any item on the given node is already selected, we could skip it
+		skip := false
+		for _, itemID := range itemIDs {
+			if !f.nodes.items[itemID].Selected {
+				continue
+			}
+
+			skip = true
+
+			currentNode := f.nodes.items[itemID]
+
+			if currentNode.requiresKey != nil {
+				continue
+			}
+
+			parentNodeIndexes := treeNode.GetParent().GetData()
+
+			f.assignKeys(itemID, parentNodeIndexes)
+		}
+
+		if skip {
+			continue
+		}
+
+		// Select a node based on a check for the selected parent of a current node or its duplicates
+		if f.checkNodes(itemIDs, f.checkNodeParent, func(i int) (skip bool) {
+			if f.nodes.items[i].IsLeaf {
+				return false
+			}
+
+			if !f.nodes.items[i].IsRootNode {
+				return false
+			}
+
+			if !f.couldProvideChildFields(i) && !f.nodeCouldProvideKeysToChildNodes(i) {
+				return true
+			}
+
+			return false
+		}, false) {
+			continue
+		}
+
+		// we are checking if we have selected any child fields on the same datasource
+		// it means that the child was unique, so we could select the parent of such a child
+		if f.checkNodes(itemIDs, f.checkNodeChilds, func(i int) (skip bool) {
+			// do not evaluate childs for the leaf nodes
+			return f.nodes.items[i].IsLeaf
+		}, false) {
+			continue
+		}
+
+		// we are checking if we have selected any sibling fields on the same datasource
+		// if a sibling is selected on the same datasource, we could select a current node
+		if f.checkNodes(itemIDs, f.checkNodeSiblings, func(i int) (skip bool) {
+			// we skip non-leaf nodes which could not provide any child selections
+			if !f.nodes.items[i].IsLeaf && !f.couldProvideChildFields(i) {
+				return true
+			}
+
+			// we should not select a __typename field based on a sibling, unless it is on a root query type
+			return f.nodes.items[i].isTypeName && !IsMutationOrQueryRootType(f.nodes.items[i].TypeName)
+		}, false) {
+			continue
+		}
+
+		// if after all checks node was not selected,
+		// we need a couple more checks
+
+		// 1. Lookup in duplicates for root nodes with enabled reference resolver
+		// in case current node suggestion is an entity root node, and it contains a key with disabled resolver
+		// we could not select such a node, because we could not jump to the subgraph which do not have a reference resolver,
+		// so we need to find a possible duplicate which has enabled entity resolver
+		// The tricky part here is to check that the parent node could provide keys for the current node
+
+		if f.checkNodes(itemIDs,
+			func(i int) bool {
+				return f.selectWithExternalCheck(i, ReasonStage3SelectFirstAvailableRootNode)
+			},
+			func(i int) (skip bool) {
+				if !f.nodes.items[i].IsRootNode {
+					return true
+				}
+
+				if f.nodes.items[i].DisabledEntityResolver {
+					return true
+				}
+
+				// when a node is a root query node, we will not have a parent
+				// so we need to check if the parent node id is not a root of a tree
+				if treeNode.GetParentID() != treeRootID {
+					// we need to check if the node with the enabled resolver could actually get a key from the parent node
+					if !f.isSelectedParentCouldProvideKeysForCurrentNode(i) {
+						return true
+					}
+				}
+
+				// if node is not a leaf, we need to check if it is possible to get any fields (not counting __typename) from this datasource
+				// it may be the case that all fields belong to different datasource, but this node could serve as the connection point
+				// to the other datasources, so we check if parent could provide a key
+				// and that we could provide a key to the next childs
+				if f.nodes.items[i].IsLeaf {
+					return false
+				}
+
+				// if current query node has only typename child field, we could select it
+				if f.childsHasOnlyTypename(i) {
+					return false
+				}
+
+				if f.couldProvideChildFields(i) {
+					return false
+				}
+
+				if f.nodeCouldProvideKeysToChildNodes(i) {
+					return false
+				}
+
+				return true
+			}, true) {
+			continue
+		}
+
+		// stages 2,3,4 - are stages when choices are equal, and we should select first available node
+
+		// 2. we choose the first available leaf node
+		if f.checkNodes(itemIDs,
+			func(i int) bool {
+				return f.selectWithExternalCheck(i, ReasonStage3SelectAvailableLeafNode)
+			},
+			func(i int) bool {
+				if !f.nodes.isLeaf(i) {
+					return true
+				}
+
+				// when node is a root query node we will not have parent
+				// so we need to check if parent node id is not a root of a tree
+				if treeNode.GetParentID() != treeRootID {
+					// we need to check if the node with enabled resolver could actually get a key from the parent node
+					if !f.isSelectedParentCouldProvideKeysForCurrentNode(i) {
+						return true
+					}
+				}
+
+				return false
+			}, true) {
+			continue
+		}
+
+		// 3. if node is not a leaf we select a node which could provide more selections on the same source
+		currentChildNodeCount := -1
+		currentItemIDx := -1
+
+		for _, duplicateIdx := range itemIDs {
+			// we need to check if the node with enabled resolver could actually get a key from the parent node
+			if !f.isSelectedParentCouldProvideKeysForCurrentNode(duplicateIdx) {
+				continue
+			}
+
+			duplicateChildNodeCount := len(f.nodes.childNodesOnSameSource(duplicateIdx))
+			if duplicateChildNodeCount > currentChildNodeCount {
+				currentItemIDx = duplicateIdx
+				currentChildNodeCount = duplicateChildNodeCount
+			}
+		}
+
+		if currentChildNodeCount > 0 {
+			// we can't select node if it doesn't have any child nodes to select
+			f.selectWithExternalCheck(currentItemIDx, ReasonStage3SelectNodeHavingPossibleChildsOnSameDataSource)
+			continue
+		}
+
+		// 4. We check here not leaf nodes which could provide keys to the child nodes
+		// this rule one of the rules responsible for the shareable nodes
+		if f.checkNodes(itemIDs,
+			func(i int) bool {
+				return f.selectWithExternalCheck(i, ReasonStage3SelectParentNodeWhichCouldGiveKeys)
+			},
+			func(i int) (skip bool) {
+				// do not evaluate childs for the leaf nodes
+				if f.nodes.items[i].IsLeaf {
+					return true
+				}
+
+				// when node is a root query node we will not have parent
+				// so we need to check if parent node id is not a root of a tree
+				if treeNode.GetParentID() != treeRootID {
+					// when node is not a root query node we also check if node could actually get a key from the parent node
+					if !f.isSelectedParentCouldProvideKeysForCurrentNode(i) {
+						return true
+					}
+				}
+
+				return !f.nodeCouldProvideKeysToChildNodes(i)
+			}, false) {
+			continue
+		}
+
+		// 5. Lookup for the first parent root node with the enabled entity resolver.
+		// When we haven't found a possible duplicate -
+		// we need to find the parent node which is a root node and has enabled entity resolver,
+		// e.g., the point in the query from where we could jump.
+		// It is a parent entity jump case, and it is less preferable,
+		// than direct entity jump, so it should go last.
+
+		// TODO: replace with all nodes check - select smallest parent entity chain
+		if f.checkNodes(itemIDs,
+			func(i int) bool {
+				if f.nodes.items[i].IsExternal && !f.nodes.items[i].IsProvided {
+					return false
+				}
+
+				parents := f.findPossibleParents(i)
+				if len(parents) > 0 {
+					if f.selectWithExternalCheck(i, ReasonStage3SelectNodeUnderFirstParentRootNode) {
+						for _, parent := range parents {
+							f.nodes.items[parent].selectWithReason(ReasonStage3SelectParentRootNodeWithEnabledEntityResolver, f.enableSelectionReasons)
+						}
+
+						return true
+					}
+				}
+				return false
+			},
+			nil, false) {
+			continue
+		}
+
+	}
+}
+
+func (f *DataSourceFilter) findPossibleParents(i int) (parentIds []int) {
+	nodesIdsToSelect := make([]int, 0, 2)
+
+	parentIdx, _ := f.nodes.parentNodeOnSameSource(i)
+	for parentIdx != -1 {
+		if f.nodes.items[parentIdx].IsExternal && !f.nodes.items[i].IsProvided {
+			break
+		}
+
+		nodesIdsToSelect = append(nodesIdsToSelect, parentIdx)
+
+		// for the parent node we are checking if it is a root node and has enabled entity resolver.
+		// the last check is to ensure that the parent node could provide keys for the current node with parentIdx
+		// if all conditions are met, we return full chain of the nodes to this parentIdx
+		if f.nodes.items[parentIdx].IsRootNode &&
+			!f.nodes.items[parentIdx].DisabledEntityResolver &&
+			f.isSelectedParentCouldProvideKeysForCurrentNode(parentIdx) {
+
+			return nodesIdsToSelect
+		}
+
+		parentIdx, _ = f.nodes.parentNodeOnSameSource(parentIdx)
+	}
+
+	return nil
+}
+
+func (f *DataSourceFilter) isSelectedParentCouldProvideKeysForCurrentNode(idx int) bool {
+	treeNode := f.nodes.treeNode(idx)
+	parentNodeIndexes := treeNode.GetParent().GetData()
+
+	for _, parentIdx := range parentNodeIndexes {
+		if !f.nodes.items[parentIdx].Selected {
+			continue
+		}
+
+		if f.parentNodeCouldProvideKeysForCurrentNode(parentIdx, idx, true) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (f *DataSourceFilter) nodeCouldProvideKeysToChildNodes(idx int) bool {
+	childIds := f.nodes.childNodesIdsOnOtherDS(idx)
+
+	for _, childId := range childIds {
+		if f.nodes.items[childId].isTypeName {
+			// we have to omit __typename field
+			// to not be in a situation when all fields are external but __typename is selectable
+			continue
+		}
+
+		if f.parentNodeCouldProvideKeysForCurrentNode(idx, childId, false) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (f *DataSourceFilter) parentNodeCouldProvideKeysForCurrentNode(parentIdx, idx int, withSetKey bool) bool {
+	// this check is widely used for all selection rules
+	// one thing to know, on the first iterations abstract selections are not rewritten, yet
+	// they could be rewritten when we see that on the given datasource some field is external
+	// This check could happen earlier when the type of the field on parent will be abstract,
+	// but the actual field on one of the concrete types, so there will be no match
+	// We handle this by adding possible keys for each possible type during nodes collecting
+
+	// first we need to check a concrete type, because it could be an entity interface type which is possible to use for jump
+	if f.parentNodeCouldProvideKeysForCurrentNodeWithTypename(parentIdx, idx, f.nodes.items[idx].TypeName, withSetKey) {
+		return true
+	}
+
+	// possible type names are used for the union and interface types
+	// for the interface objects could be used one of the possible types or the interface object type itself
+	if len(f.nodes.items[idx].possibleTypeNames) > 0 {
+		for _, typeName := range f.nodes.items[idx].possibleTypeNames {
+			if f.parentNodeCouldProvideKeysForCurrentNodeWithTypename(parentIdx, idx, typeName, false) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// parentNodeCouldProvideKeysForCurrentNodeWithTypename - checks if the parent node could provide keys for the current node
+// e.g. if there is a jump path between the parent node and the current node
+// NOTE: method has side effects, it sets requiresKey for the current node
+func (f *DataSourceFilter) parentNodeCouldProvideKeysForCurrentNodeWithTypename(parentIdx, idx int, typeName string, setRequiresKey bool) bool {
+	if f.nodes.items[parentIdx].DataSourceHash == f.nodes.items[idx].DataSourceHash {
+		return true
+	}
+
+	jumpsForTypename, exists := f.jumpsForPathAndTypeName(f.nodes.items[idx].ParentPath, typeName)
+	if !exists {
+		return false
+	}
+
+	path, exists := hasPathBetweenDs(jumpsForTypename, f.nodes.items[parentIdx].DataSourceHash, f.nodes.items[idx].DataSourceHash, f.allowFallbackKeyJumps)
+	if !exists {
+		return false
+	}
+
+	if setRequiresKey {
+		f.nodes.items[idx].requiresKey = path
+	}
+
+	return true
+}
+
+// sourceConnectionRequiresMissingFallbackKeyField reports whether the node itself
+// is a missing key member of a fallback jump on the given path: the target compound key
+// contains the node's field, but the jump source cannot provide it.
+// Such a path is unusable for this node - we cannot gather a key field
+// through a jump which requires that very field to be gathered first.
+func sourceConnectionRequiresMissingFallbackKeyField(path *SourceConnection, node *NodeSuggestion) bool {
+	if path == nil || node == nil {
+		return false
+	}
+
+	fieldPath := node.Path
+
+	for _, jump := range path.Jumps {
+		if !jump.Fallback {
+			continue
+		}
+
+		targetContainsField := false
+		for _, keyPath := range jump.FieldPaths {
+			if keyPath.Path == fieldPath {
+				targetContainsField = true
+				break
+			}
+		}
+		if !targetContainsField {
+			continue
+		}
+
+		for _, keyPath := range jump.SourcePaths {
+			if keyPath.Path == fieldPath {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	return false
+}
+
+type nodeInfo struct {
+	// nodeIdx is the index of the node in the nodes slice
+	nodeIdx int
+	// jumpCount is the number of jumps to the node
+	jumpCount          int
+	hasSelectedSibling bool
+	selectableChilds   int
+}
+
+func (f *DataSourceFilter) checkNodes(duplicates []int, callback func(nodeIdx int) (nodeIsSelected bool), skip func(nodeIdx int) (skip bool), usePriority bool) (nodeIsSelected bool) {
+	allowedToSelect := make([]int, 0, len(duplicates))
+
+	for _, i := range duplicates {
+		if f.nodes.items[i].IsExternal && !f.nodes.items[i].IsProvided {
+			continue
+		}
+
+		if skip != nil && skip(i) {
+			continue
+		}
+
+		allowedToSelect = append(allowedToSelect, i)
+	}
+
+	nodesInfos := make([]nodeInfo, 0, len(allowedToSelect))
+
+	for _, i := range allowedToSelect {
+		jumpCount := 0
+
+		if f.nodes.items[i].requiresKey != nil {
+			jumpCount = len(f.nodes.items[i].requiresKey.Jumps)
+		}
+
+		hasSelectedSibling := false
+		countOfSelectableChilds := 0
+		if usePriority {
+			for _, sibling := range f.nodes.siblingNodesOnSameSource(i) {
+				if f.nodes.items[sibling].Selected {
+					hasSelectedSibling = true
+					break
+				}
+			}
+
+			// count the whole selectable subtree, not just direct children, so a
+			// duplicate whose @provides/shareable coverage reaches deeper (e.g. an
+			// interface field that provides its nested selection) is preferred
+			countOfSelectableChilds = f.nodes.selectableTreeNodeCount(i)
+		}
+
+		nodesInfos = append(nodesInfos, nodeInfo{
+			nodeIdx:            i,
+			jumpCount:          jumpCount,
+			hasSelectedSibling: hasSelectedSibling,
+			selectableChilds:   countOfSelectableChilds,
+		})
+	}
+
+	// sort by the number of jumps, selectable child count, selected siblings
+	slices.SortFunc(nodesInfos, func(a, b nodeInfo) int {
+		if usePriority {
+			// desc on count
+			if n := cmp.Compare(b.selectableChilds, a.selectableChilds); n != 0 {
+				return n
+			}
+
+			if a.hasSelectedSibling != b.hasSelectedSibling {
+				if a.hasSelectedSibling {
+					return -1 // a comes first
+				}
+				if b.hasSelectedSibling {
+					return 1 // b comes first
+				}
+			}
+		}
+
+		// acs order from 0 to n
+		return cmp.Compare(a.jumpCount, b.jumpCount)
+	})
+
+	for _, j := range nodesInfos {
+		if callback(j.nodeIdx) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (f *DataSourceFilter) checkNodeChilds(i int) (nodeIsSelected bool) {
+	childs := f.nodes.childNodesOnSameSource(i)
+	for _, child := range childs {
+		if f.nodes.items[child].Selected {
+			if f.selectWithExternalCheck(i, ReasonStage2SameSourceNodeOfSelectedChild) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (f *DataSourceFilter) checkNodeSiblings(i int) (nodeIsSelected bool) {
+	siblings := f.nodes.siblingNodesOnSameSource(i)
+	for _, sibling := range siblings {
+
+		// we should not select a field on the datasource of sibling which depends on the current field
+		dependsOnFieldRefs := f.fieldDependsOn[f.nodes.items[sibling].FieldRef]
+		if slices.Contains(dependsOnFieldRefs, f.nodes.items[i].FieldRef) {
+			continue
+		}
+
+		if f.nodes.items[sibling].Selected {
+			if f.selectWithExternalCheck(i, ReasonStage2SameSourceNodeOfSelectedSibling) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (f *DataSourceFilter) checkNodeParent(i int) (nodeIsSelected bool) {
+	parentIdx, ok := f.nodes.parentNodeOnSameSource(i)
+	if !ok {
+		return false
+	}
+
+	if !f.nodes.items[parentIdx].Selected {
+		return false
+	}
+
+	// if selected parent is external and selected
+	// but current node is not provided, we can't select it as it is external
+	// it means that there was provided some sibling, but not the current field
+	parentIsExternal := f.nodes.items[parentIdx].IsExternal
+	if parentIsExternal && !f.nodes.items[i].IsProvided {
+		return false
+	}
+
+	if f.selectWithExternalCheck(i, ReasonStage2SameSourceNodeOfSelectedParent) {
+		if f.nodes.items[i].IsProvided && !f.nodes.items[i].IsLeaf {
+			f.selectProvidedChildNodes(i)
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func (f *DataSourceFilter) selectProvidedChildNodes(i int) {
+	children := f.nodes.childNodesOnSameSource(i)
+	for _, childId := range children {
+		if f.nodes.items[childId].IsProvided {
+			f.nodes.items[childId].selectWithReason(ReasonProvidesProvidedByPlanner, f.enableSelectionReasons)
+			if !f.nodes.items[childId].IsLeaf {
+				f.selectProvidedChildNodes(childId)
+			}
+		}
+	}
+}
+
+func (f *DataSourceFilter) selectWithExternalCheck(i int, reason string) (nodeIsSelected bool) {
+	if f.nodes.items[i].IsExternal && !f.nodes.items[i].IsProvided {
+		return false
+	}
+
+	f.nodes.items[i].selectWithReason(reason, f.enableSelectionReasons)
+	return true
+}
+
+// couldProvideChildFields - checks if the node could provide any selectable child fields on the same datasource
+func (f *DataSourceFilter) couldProvideChildFields(i int) bool {
+	nodesIds := f.nodes.childNodesOnSameSource(i)
+
+	hasSelectableFields := false
+	for _, i := range nodesIds {
+		if f.nodes.items[i].isTypeName {
+			// we have to omit __typename field
+			// to not be in a situation when all fields are external but __typename is selectable
+			continue
+		}
+
+		if f.nodes.items[i].IsExternal && !f.nodes.items[i].IsProvided {
+			continue
+		}
+
+		if f.nodes.items[i].IsLeaf {
+			// when the node is a leaf, it could be selected
+			hasSelectableFields = true
+			break
+		}
+
+		// for non-leaf nodes, we need to check again if they could provide any child fields
+		// or keys to the nested child nodes
+		// this ensures bigger chains of non-leaf nodes selected
+		if f.couldProvideChildFields(i) || f.nodeCouldProvideKeysToChildNodes(i) {
+			hasSelectableFields = true
+			break
+		}
+	}
+
+	return hasSelectableFields
+}
+
+func (f *DataSourceFilter) childsHasOnlyTypename(i int) (hasOnlyTypename bool) {
+	treeNode := f.nodes.treeNode(i)
+	children := treeNode.GetChildren()
+
+	if len(children) == 0 {
+		return false
+	}
+
+	hasTypeName := false
+	hasFields := false
+
+	for _, child := range children {
+		itemIds := child.GetData()
+		if len(itemIds) == 0 {
+			// the field is intentionally left unplanned (unfetchable) -
+			// it has no suggestions and contributes neither fields nor typename
+			continue
+		}
+		firstItem := itemIds[0]
+
+		if f.nodes.items[firstItem].isTypeName {
+			hasTypeName = true
+			continue
+		}
+
+		hasFields = true
+	}
+
+	return !hasFields && hasTypeName
+}

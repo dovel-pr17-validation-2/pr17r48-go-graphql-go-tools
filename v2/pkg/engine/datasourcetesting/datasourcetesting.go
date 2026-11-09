@@ -1,0 +1,309 @@
+package datasourcetesting
+
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"slices"
+	"testing"
+
+	"github.com/kylelemons/godebug/diff"
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/astnormalization"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/astprinter"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/asttransform"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/astvalidation"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/engine/plan"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/engine/postprocess"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/engine/resolve"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/internal/unsafeparser"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/internal/unsafeprinter"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/operationreport"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/testing/permutations"
+)
+
+type testOptions struct {
+	postProcessor                  *postprocess.Processor
+	skipReason                     string
+	withFieldInfo                  bool
+	withPrintPlan                  bool
+	withIncludeFieldDependencies   bool
+	withFetchReasons               bool
+	withDefer                      bool
+	validationOptions              []astvalidation.Option
+	withCalculateFieldDependencies bool
+	customPlanChecker              func(t *testing.T, actualPlan plan.Plan)
+}
+
+// WithPlanCheck replaces the comparison with the expected plan by the given check of the actual plan.
+// Use it when a test asserts only a part of the plan, e.g. the field dependencies of a single fetch.
+func WithPlanCheck(checker func(t *testing.T, actualPlan plan.Plan)) func(*testOptions) {
+	return func(o *testOptions) {
+		o.customPlanChecker = checker
+	}
+}
+
+func WithDefer() func(*testOptions) {
+	return func(o *testOptions) {
+		o.withDefer = true
+	}
+}
+
+func WithSkipReason(reason string) func(*testOptions) {
+	return func(o *testOptions) {
+		o.skipReason = reason
+	}
+}
+
+func WithDefaultPostProcessor() func(*testOptions) {
+	return func(o *testOptions) {
+		o.postProcessor = postprocess.NewProcessor(
+			postprocess.DisableResolveInputTemplates(),
+			postprocess.DisableCreateConcreteSingleFetchTypes(),
+			postprocess.DisableCreateParallelNodes(),
+			postprocess.DisableMergeFields(),
+			postprocess.DisableCollectAuthorizationCoordinates(),
+		)
+	}
+}
+
+func WithPostProcessor(options ...postprocess.ProcessorOption) func(*testOptions) {
+	return func(o *testOptions) {
+		o.postProcessor = postprocess.NewProcessor(options...)
+	}
+}
+
+func WithFieldInfo() func(*testOptions) {
+	return func(o *testOptions) {
+		o.withFieldInfo = true
+	}
+}
+
+func WithPrintPlan() func(*testOptions) {
+	return func(o *testOptions) {
+		o.withPrintPlan = true
+		o.withFieldInfo = true
+	}
+}
+
+func WithIncludeFieldDependencies() func(*testOptions) {
+	return func(o *testOptions) {
+		o.withFieldInfo = true
+		o.withIncludeFieldDependencies = true
+		o.withCalculateFieldDependencies = true
+	}
+}
+
+func WithCalculateFieldDependencies() func(*testOptions) {
+	return func(o *testOptions) {
+		o.withCalculateFieldDependencies = true
+	}
+}
+
+func WithFetchReasons() func(*testOptions) {
+	return func(o *testOptions) {
+		o.withFieldInfo = true
+		o.withIncludeFieldDependencies = true
+		o.withCalculateFieldDependencies = true
+		o.withFetchReasons = true
+	}
+}
+
+func WithValidationOptions(options ...astvalidation.Option) func(*testOptions) {
+	return func(o *testOptions) {
+		o.validationOptions = options
+	}
+}
+
+func RunWithPermutations(t *testing.T, definition, operation, operationName string, expectedPlan plan.Plan, config plan.Configuration, options ...func(*testOptions)) {
+	t.Helper()
+
+	dataSourcePermutations := permutations.Generate(config.DataSources)
+
+	for i := range dataSourcePermutations {
+		permutation := dataSourcePermutations[i]
+		t.Run(fmt.Sprintf("permutation %v", permutation.Order), func(t *testing.T) {
+			permutationPlanConfiguration := config
+			permutationPlanConfiguration.DataSources = permutation.DataSources
+
+			t.Run("run", RunTest(
+				definition,
+				operation,
+				operationName,
+				expectedPlan,
+				permutationPlanConfiguration,
+				options...,
+			))
+		})
+	}
+}
+
+func RunWithPermutationsVariants(t *testing.T, definition, operation, operationName string, expectedPlans []plan.Plan, config plan.Configuration, options ...func(*testOptions)) {
+	dataSourcePermutations := permutations.Generate(config.DataSources)
+
+	if len(dataSourcePermutations) != len(expectedPlans) {
+		t.Fatalf("expected %d plan variants, got %d", len(dataSourcePermutations), len(expectedPlans))
+	}
+
+	for i := range dataSourcePermutations {
+		permutation := dataSourcePermutations[i]
+		t.Run(fmt.Sprintf("permutation %v", permutation.Order), func(t *testing.T) {
+			permutationPlanConfiguration := config
+			permutationPlanConfiguration.DataSources = permutation.DataSources
+
+			t.Run("run", RunTest(
+				definition,
+				operation,
+				operationName,
+				expectedPlans[i],
+				permutationPlanConfiguration,
+				options...,
+			))
+		})
+	}
+}
+
+func RunTest(definition, operation, operationName string, expectedPlan plan.Plan, config plan.Configuration, options ...func(*testOptions)) func(t *testing.T) {
+	return RunTestWithVariables(definition, operation, operationName, "", expectedPlan, config, options...)
+}
+
+func RunTestWithVariables(definition, operation, operationName, variables string, expectedPlan plan.Plan, config plan.Configuration, options ...func(*testOptions)) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Helper()
+
+		// by default, we don't want to have field info in the tests because it's too verbose
+		config.DisableIncludeInfo = true
+		config.DisableIncludeFieldDependencies = true
+		config.DisableCalculateFieldDependencies = true
+
+		opts := &testOptions{}
+		for _, o := range options {
+			o(opts)
+		}
+
+		if opts.withFieldInfo {
+			config.DisableIncludeInfo = false
+		}
+
+		if opts.withIncludeFieldDependencies {
+			config.DisableIncludeFieldDependencies = false
+		}
+
+		if opts.withCalculateFieldDependencies {
+			config.DisableCalculateFieldDependencies = false
+		}
+
+		if opts.withFetchReasons {
+			config.BuildFetchReasons = true
+		}
+
+		if opts.skipReason != "" {
+			t.Skip(opts.skipReason)
+		}
+
+		def := unsafeparser.ParseGraphqlDocumentString(definition)
+		op := unsafeparser.ParseGraphqlDocumentString(operation)
+		if variables != "" {
+			op.Input.Variables = []byte(variables)
+		}
+
+		err := asttransform.MergeDefinitionWithBaseSchema(&def)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		normalizationOptions := []astnormalization.Option{
+			astnormalization.WithExtractVariables(),
+			astnormalization.WithInlineFragmentSpreads(),
+			astnormalization.WithRemoveFragmentDefinitions(),
+			astnormalization.WithRemoveUnusedVariables(),
+		}
+
+		if opts.withDefer {
+			normalizationOptions = append(normalizationOptions, astnormalization.WithEnableDefer())
+		}
+
+		norm := astnormalization.NewWithOpts(normalizationOptions...)
+		var report operationreport.Report
+		norm.NormalizeOperation(&op, &def, &report)
+
+		normalized := unsafeprinter.PrettyPrint(&op)
+		_ = normalized
+
+		valid := astvalidation.DefaultOperationValidator(opts.validationOptions...)
+		valid.Validate(&op, &def, &report)
+
+		p, err := plan.NewPlanner(config)
+		require.NoError(t, err)
+
+		var planOpts []plan.Opts
+		if opts.withPrintPlan {
+			planOpts = append(planOpts, plan.IncludeQueryPlanInResponse())
+		}
+
+		actualPlan := p.Plan(&op, &def, operationName, &report, planOpts...)
+		if report.HasErrors() {
+			_, err := astprinter.PrintStringIndent(&def, "  ")
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = astprinter.PrintStringIndent(&op, "  ")
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Fatal(report.Error())
+		}
+
+		if opts.postProcessor != nil {
+			opts.postProcessor.Process(actualPlan)
+		}
+
+		if opts.withPrintPlan {
+			switch p := actualPlan.(type) {
+			case *plan.SynchronousResponsePlan:
+				t.Log("\n", p.Response.Fetches.QueryPlan().PrettyPrint())
+			default:
+			}
+		}
+
+		if opts.customPlanChecker != nil {
+			opts.customPlanChecker(t, actualPlan)
+			return
+		}
+
+		formatterConfig := map[reflect.Type]any{
+			// normalize byte slices to strings
+			reflect.TypeFor[[]byte](): func(b []byte) string { return fmt.Sprintf(`"%s"`, string(b)) },
+			// normalize map[string]struct{} to json array of keys
+			reflect.TypeOf(map[string]struct{}{}): func(m map[string]struct{}) string {
+				var keys []string
+				for k := range m {
+					keys = append(keys, k)
+				}
+				slices.Sort(keys)
+
+				keysPrinted, _ := json.Marshal(keys)
+				return string(keysPrinted)
+			},
+			reflect.TypeFor[resolve.SkipArrayItem](): func(resolve.SkipArrayItem) string { return "skip_function" },
+		}
+
+		prettyCfg := &pretty.Config{
+			Diffable:          true,
+			IncludeUnexported: false,
+			Formatter:         formatterConfig,
+		}
+
+		exp := prettyCfg.Sprint(expectedPlan)
+		act := prettyCfg.Sprint(actualPlan)
+
+		if !assert.Equal(t, exp, act) {
+			if diffResult := diff.Diff(exp, act); diffResult != "" {
+				t.Errorf("Plan does not match(-want +got)\n%s", diffResult)
+			}
+		}
+	}
+}

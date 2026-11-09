@@ -1,0 +1,303 @@
+package ast
+
+import (
+	"bytes"
+
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/internal/unsafebytes"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/lexer/literal"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/lexer/position"
+)
+
+type Field struct {
+	Alias         Alias              // optional, e.g. renamed:
+	Name          ByteSliceReference // field name, e.g. id
+	HasArguments  bool
+	Arguments     ArgumentList // optional
+	HasDirectives bool
+	Directives    DirectiveList // optional
+	SelectionSet  int           // optional
+	HasSelections bool
+	Position      position.Position
+}
+
+func (d *Document) CopyField(ref int) int {
+	var arguments ArgumentList
+	var directives DirectiveList
+	var selectionSet int
+	if d.Fields[ref].HasArguments {
+		arguments = d.CopyArgumentList(d.Fields[ref].Arguments)
+	}
+	if d.Fields[ref].HasDirectives {
+		directives = d.CopyDirectiveList(d.Fields[ref].Directives)
+	}
+	if d.Fields[ref].HasSelections {
+		selectionSet = d.CopySelectionSet(d.Fields[ref].SelectionSet)
+	}
+	copyRef := d.AddField(Field{
+		Name:          d.copyByteSliceReference(d.Fields[ref].Name),
+		Alias:         d.CopyAlias(d.Fields[ref].Alias),
+		HasArguments:  d.Fields[ref].HasArguments,
+		Arguments:     arguments,
+		HasDirectives: d.Fields[ref].HasDirectives,
+		Directives:    directives,
+		HasSelections: d.Fields[ref].HasSelections,
+		SelectionSet:  selectionSet,
+	}).Ref
+	if d.OnCopyField != nil {
+		d.OnCopyField(ref, copyRef)
+	}
+	return copyRef
+}
+
+func (d *Document) FieldNameBytes(ref int) ByteSlice {
+	return d.Input.ByteSlice(d.Fields[ref].Name)
+}
+
+// FieldNameUnsafeString - returns field name as a string which is unsafe pointer to document input content
+func (d *Document) FieldNameUnsafeString(ref int) string {
+	return unsafebytes.BytesToString(d.Input.ByteSlice(d.Fields[ref].Name))
+}
+
+// FieldNameString - returns fied name as a string value
+func (d *Document) FieldNameString(ref int) string {
+	return string(d.Input.ByteSlice(d.Fields[ref].Name))
+}
+
+func (d *Document) AddField(field Field) Node {
+	d.Fields = append(d.Fields, field)
+	return Node{
+		Kind: NodeKindField,
+		Ref:  len(d.Fields) - 1,
+	}
+}
+
+func (d *Document) AddArgumentToField(fieldRef, argRef int) {
+	if !d.Fields[fieldRef].HasArguments {
+		d.Fields[fieldRef].HasArguments = true
+		d.Fields[fieldRef].Arguments.Refs = d.Refs[d.NextRefIndex()][:0]
+	}
+	d.Fields[fieldRef].Arguments.Refs = append(d.Fields[fieldRef].Arguments.Refs, argRef)
+}
+
+func (d *Document) FieldArguments(ref int) []int {
+	return d.Fields[ref].Arguments.Refs
+}
+
+func (d *Document) FieldArgument(field int, name ByteSlice) (ref int, exists bool) {
+	for _, i := range d.Fields[field].Arguments.Refs {
+		if bytes.Equal(d.ArgumentNameBytes(i), name) {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+func (d *Document) FieldDirectives(ref int) []int {
+	return d.Fields[ref].Directives.Refs
+}
+
+func (d *Document) FieldsHaveSameShape(left, right int) bool {
+	leftAliasDefined := d.FieldAliasIsDefined(left)
+	rightAliasDefined := d.FieldAliasIsDefined(right)
+
+	switch {
+	case !leftAliasDefined && !rightAliasDefined:
+		return d.Input.ByteSliceReferenceContentEquals(d.Fields[left].Name, d.Fields[right].Name)
+	case leftAliasDefined && rightAliasDefined:
+		return d.Input.ByteSliceReferenceContentEquals(d.Fields[left].Alias.Name, d.Fields[right].Alias.Name)
+	case leftAliasDefined && !rightAliasDefined:
+		return d.Input.ByteSliceReferenceContentEquals(d.Fields[left].Alias.Name, d.Fields[right].Name)
+	case !leftAliasDefined && rightAliasDefined:
+		return d.Input.ByteSliceReferenceContentEquals(d.Fields[left].Name, d.Fields[right].Alias.Name)
+	default:
+		return false
+	}
+}
+
+func (d *Document) FieldHasArguments(ref int) bool {
+	return d.Fields[ref].HasArguments
+}
+
+func (d *Document) FieldHasSelections(ref int) bool {
+	return d.Fields[ref].HasSelections
+}
+
+func (d *Document) FieldHasDirectives(ref int) bool {
+	return d.Fields[ref].HasDirectives
+}
+
+func (d *Document) FieldsAreEqualFlat(left, right int, checkDirectivesEquality bool) bool {
+	equal := bytes.Equal(d.FieldNameBytes(left), d.FieldNameBytes(right)) && // name
+		bytes.Equal(d.FieldAliasBytes(left), d.FieldAliasBytes(right)) && // alias
+		!d.FieldHasSelections(left) && !d.FieldHasSelections(right) && // selections
+		d.ArgumentSetsAreEquals(d.FieldArguments(left), d.FieldArguments(right)) // arguments
+
+	if !equal {
+		return false
+	}
+
+	if checkDirectivesEquality {
+		// directives set equality
+		return d.DirectiveSetsAreEqual(d.FieldDirectives(left), d.FieldDirectives(right))
+	}
+
+	// directives set has compatible stream directive
+	// we don't care about other execution directives
+	return d.DirectiveSetsHasCompatibleStreamDirective(d.FieldDirectives(left), d.FieldDirectives(right))
+}
+
+func (d *Document) FieldSelectionSet(ref int) (selectionSetRef int, ok bool) {
+	if !d.Fields[ref].HasSelections {
+		return InvalidRef, false
+	}
+	return d.Fields[ref].SelectionSet, true
+}
+
+// FieldTypeNode - returns the type node of a field. it is applicable for fields on object and interface types
+func (d *Document) FieldTypeNode(fieldName []byte, enclosingNode Node) (node Node, ok bool) {
+	var (
+		fieldDefRef int
+		hasField    bool
+	)
+
+	switch enclosingNode.Kind {
+	case NodeKindObjectTypeDefinition:
+		fieldDefRef, hasField = d.ObjectTypeDefinitionFieldWithName(enclosingNode.Ref, fieldName)
+		if !hasField {
+			return
+		}
+	case NodeKindInterfaceTypeDefinition:
+		fieldDefRef, hasField = d.InterfaceTypeDefinitionFieldWithName(enclosingNode.Ref, fieldName)
+		if !hasField {
+			return
+		}
+	default:
+		return
+	}
+
+	fieldDefTypeName := d.FieldDefinitionTypeNameBytes(fieldDefRef)
+	node, hasNode := d.NodeByName(fieldDefTypeName)
+	if !hasNode {
+		return
+	}
+
+	return node, true
+}
+
+// MergeFieldsDefer reconciles @__defer_internal directives when right is merged into left
+// (right is discarded by the caller). Rules:
+//   - if either side is not deferred, the merged field is not deferred — a non-deferred path
+//     means the field must be delivered in the initial response
+//   - if both sides defer, the smaller id wins, since lower ids correspond to earlier/outer
+//     defer scopes that subsume later ones
+func (d *Document) MergeFieldsDefer(left, right int) {
+	if d.OnMergeFields != nil {
+		d.OnMergeFields(left, right)
+	}
+
+	leftDeferDirectiveRef, leftDeferExists := d.Fields[left].Directives.HasDirectiveByNameBytes(d, literal.DEFER_INTERNAL)
+	rightDeferDirectiveRef, rightDeferExists := d.Fields[right].Directives.HasDirectiveByNameBytes(d, literal.DEFER_INTERNAL)
+
+	switch {
+	case !leftDeferExists && !rightDeferExists:
+		// do nothing
+	case leftDeferExists && !rightDeferExists:
+		d.Fields[left].Directives.RemoveDirectiveByRef(leftDeferDirectiveRef)
+		d.Fields[left].HasDirectives = len(d.Fields[left].Directives.Refs) > 0
+	case !leftDeferExists:
+		// do nothing, as we are merging right into left
+		// and left do not have the defer,
+		// so right will be discarded
+	default:
+		// both have the defer; defer with smaller id wins
+		leftDeferIdValue, _ := d.DirectiveArgumentValueByName(leftDeferDirectiveRef, []byte("id"))
+		rightDeferIdValue, _ := d.DirectiveArgumentValueByName(rightDeferDirectiveRef, []byte("id"))
+
+		leftId := int(d.IntValueAsInt(leftDeferIdValue.Ref))
+		rightId := int(d.IntValueAsInt(rightDeferIdValue.Ref))
+
+		switch {
+		case leftId == rightId:
+			// do nothing, they are equal
+		case leftId < rightId:
+			// left wins, right discarded
+		case leftId > rightId:
+			d.Fields[left].Directives.RemoveDirectiveByRef(leftDeferDirectiveRef)
+			// append a right defer to the left
+			// no need to import as a right will be discarded
+			d.Fields[left].Directives.Refs = append(d.Fields[left].Directives.Refs, rightDeferDirectiveRef)
+		}
+	}
+}
+
+// AddDeferInternalDirectiveToField attaches @__defer_internal(id: id, label: label, parentDeferId: parentID) to the given field.
+func (d *Document) AddDeferInternalDirectiveToField(fieldRef int, id int, label string, parentID int) {
+	if id == 0 {
+		return
+	}
+
+	var argRefs []int
+
+	argRefs = append(argRefs, d.AddIntArgument("id", id))
+
+	if label != "" {
+		argRefs = append(argRefs, d.AddStringArgument("label", label))
+	}
+	if parentID != 0 {
+		argRefs = append(argRefs, d.AddIntArgument("parentDeferId", parentID))
+	}
+
+	directiveRef := d.AddDirective(Directive{
+		Name:         d.Input.AppendInputBytes(literal.DEFER_INTERNAL),
+		HasArguments: len(argRefs) > 0,
+		Arguments: ArgumentList{
+			Refs: argRefs,
+		},
+	})
+
+	d.AddDirectiveToNode(directiveRef, Node{
+		Kind: NodeKindField,
+		Ref:  fieldRef,
+	})
+}
+
+func (d *Document) FieldInternalDeferID(fieldRef int) (id int, exists bool) {
+	id, _, exists = d.FieldInternalDeferIDWithDirectiveRef(fieldRef)
+	return
+}
+
+func (d *Document) FieldInternalDeferIDWithDirectiveRef(fieldRef int) (id int, directiveRef int, exists bool) {
+	directiveRef, ok := d.Fields[fieldRef].Directives.HasDirectiveByNameBytes(d, literal.DEFER_INTERNAL)
+	if !ok {
+		return 0, 0, false
+	}
+	idValue, ok := d.DirectiveArgumentValueByName(directiveRef, []byte("id"))
+	if !ok || idValue.Kind != ValueKindInteger {
+		return 0, 0, false
+	}
+	return int(d.IntValueAsInt(idValue.Ref)), directiveRef, true
+}
+
+// FieldDeferInfo checks if the given field ref has @__defer_internal directive and
+// returns its id, label, parentID
+func (d *Document) FieldDeferInfo(fieldRef int) (id int, label string, parentID int, exists bool) {
+	directiveRef, ok := d.Fields[fieldRef].Directives.HasDirectiveByNameBytes(d, literal.DEFER_INTERNAL)
+	if !ok {
+		return 0, "", 0, false
+	}
+	idValue, ok := d.DirectiveArgumentValueByName(directiveRef, []byte("id"))
+	if !ok || idValue.Kind != ValueKindInteger {
+		return 0, "", 0, false
+	}
+	id = int(d.IntValueAsInt(idValue.Ref))
+	if id == 0 {
+		return 0, "", 0, false
+	}
+	if labelValue, ok := d.DirectiveArgumentValueByName(directiveRef, []byte("label")); ok && labelValue.Kind == ValueKindString {
+		label = d.StringValueContentString(labelValue.Ref)
+	}
+	if parentValue, ok := d.DirectiveArgumentValueByName(directiveRef, []byte("parentDeferId")); ok && parentValue.Kind == ValueKindInteger {
+		parentID = int(d.IntValueAsInt(parentValue.Ref))
+	}
+	return id, label, parentID, true
+}

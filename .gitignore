@@ -1,0 +1,10 @@
+.idea/*
+.vscode/*
+*.out
+*.test
+.DS_Store
+pkg/parser/testdata/lotto.graphql
+*node_modules*
+*vendor*
+/.cursorrules
+.serena

@@ -1,0 +1,31 @@
+package postprocess
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestAddMissingNestedDependencies_ProcessFetchTree(t *testing.T) {
+	t.Run("add missing dependencies to nested fetches on same merge path", func(t *testing.T) {
+		processor := &addMissingNestedDependencies{}
+		input := seq(
+			sf(0, mergePath("a")),
+			sf(1, mergePath("b")),
+			sf(2, responsePath("a")),
+			sf(3, responsePath("b.c")),
+			sf(4, responsePath("a"), dependsOn(0)),
+			sf(5, mergePath("y")),
+		)
+		processor.ProcessFetchTree(input)
+		expected := seq(
+			sf(0, mergePath("a")),
+			sf(1, mergePath("b")),
+			sf(2, responsePath("a"), dependsOn(0)),
+			sf(3, responsePath("b.c"), dependsOn(1)),
+			sf(4, responsePath("a"), dependsOn(0)),
+			sf(5, mergePath("y")),
+		)
+		require.Equal(t, expected, input)
+	})
+}

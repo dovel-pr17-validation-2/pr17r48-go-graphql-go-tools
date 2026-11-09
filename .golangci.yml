@@ -1,0 +1,66 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errorlint
+    - fatcontext
+    - gocheckcompilerdirectives
+    - govet
+    - ineffassign
+    - loggercheck
+    - makezero
+    - nilerr
+    - nilnesserr
+    - nolintlint
+    - perfsprint
+    - reassign
+    - spancheck
+    - embeddedstructfieldcheck
+    - modernize
+    - staticcheck
+    - tparallel
+    - unconvert
+    - wastedassign
+
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - std-error-handling
+    rules:
+      - path: (_test\.go|pkg/grpctest/)
+        linters:
+          - errchkjson
+          - perfsprint
+      - linters:
+          - staticcheck
+        text: "QF1008:"
+      - path: pkg/astvalidation/reference
+        linters:
+          - staticcheck
+  settings:
+    embeddedstructfieldcheck:
+      # Checks that sync.Mutex and sync.RWMutex are not used as embedded fields.
+      forbid-mutex: true
+    perfsprint:
+      # Go 1.26 makes unformatted fmt.Errorf generally allocation-equivalent to errors.New.
+      errorf: false
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/wundergraph)
+        - prefix(github.com/wundergraph/graphql-go-tools)

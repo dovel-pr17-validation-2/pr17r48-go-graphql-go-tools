@@ -1,0 +1,209 @@
+package plan
+
+import (
+	"github.com/jensneuse/abstractlogger"
+
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/engine/resolve"
+)
+
+type Configuration struct {
+	Logger                             abstractlogger.Logger
+	DefaultFlushIntervalMillis         int64
+	DataSources                        []DataSource
+	MaxDataSourceCollectorsConcurrency uint
+	Fields                             FieldConfigurations
+	Types                              TypeConfigurations
+	EntityInterfaceNames               []string
+	// DisableResolveFieldPositions should be set to true for testing purposes
+	// This setting removes position information from all fields
+	// In production, this should be set to false so that error messages are easier to understand
+	DisableResolveFieldPositions bool
+	// EnableOperationNamePropagation appends the operation name from nested operations
+	EnableOperationNamePropagation bool
+
+	// EnableMultiFetch records planner artifacts on entity fetches so the
+	// postprocess MultiFetch stage can merge same-subgraph, same-wave entity
+	// fetches into one request. Default false; the artifacts never reach the
+	// executable plan (they are cleared during postprocessing).
+	EnableMultiFetch bool
+
+	CustomResolveMap map[string]resolve.CustomResolve
+
+	// Debug - configure debug options
+	Debug DebugConfiguration
+
+	MinifySubgraphOperations bool
+
+	// DisableIncludeInfo controls whether the planner generates resolve.FieldInfo (useful in tests).
+	DisableIncludeInfo bool
+
+	// DisableIncludeFieldDependencies controls whether the planner generates
+	// field dependency structures.
+	// It requires DisableIncludeInfo set to false.
+	DisableIncludeFieldDependencies bool
+
+	// DisableCalculateFieldDependencies controls whether the planner calculates
+	// field dependencies at all.
+	DisableCalculateFieldDependencies bool
+
+	// BuildFetchReasons allows generating the FetchReasons structure for all the fields.
+	// It may be enabled by some other components of the engine.
+	// It requires DisableIncludeInfo and DisableIncludeFieldDependencies set to false.
+	BuildFetchReasons bool
+
+	// ValidateRequiredExternalFields validates nullable external "@requires" dependencies.
+	// When a subgraph entity fetch returns a null value with an error for a field set specified in
+	// the "@requires" directive, any following fetch that depends on it should not receive such an
+	// entity.
+	// This option requires BuildFetchReasons set to true.
+	ValidateRequiredExternalFields bool
+
+	// ComputeCosts enables static cost computation for operations.
+	ComputeCosts bool
+
+	// When the list size is unknown from directives, this value is used as a default for static cost.
+	StaticCostDefaultListSize int
+
+	// IgnoreImplementingTypeWeights, when true, ignores @cost weights contributed by
+	// implementing types on abstract (interface/union) fields that have no weight of their own.
+	// Emulates Apollo's cost behavior.
+	IgnoreImplementingTypeWeights bool
+
+	// RelaxSubgraphOperationFieldSelectionMergingNullability relaxes the nullability validation
+	// for field selection merging in upstream (subgraph) operations when enclosing types are
+	// non-overlapping concrete object types. This is a deliberate spec deviation.
+	// When true, factories that support it will allow differing nullability
+	// (e.g. String! vs String) on fields in non-overlapping inline fragments.
+	RelaxSubgraphOperationFieldSelectionMergingNullability bool
+}
+
+type DebugConfiguration struct {
+	PrintOperationTransformations bool
+	PrintOperationEnableASTRefs   bool
+	PrintPlanningPaths            bool
+	PrintQueryPlans               bool
+
+	PrintNodeSuggestions                  bool
+	PrintNodeSuggestionsFilterNotSelected bool
+
+	NodeSelectionVisitor bool
+	ConfigurationVisitor bool
+	PlanningVisitor      bool
+	DatasourceVisitor    bool
+}
+
+type NodeSuggestionDebugConfiguration struct {
+	SelectionReasons  bool
+	FilterNotSelected bool
+}
+
+type TypeConfigurations []TypeConfiguration
+
+func (t *TypeConfigurations) RenameTypeNameOnMatchStr(typeName string) string {
+	for i := range *t {
+		if (*t)[i].TypeName == typeName {
+			return (*t)[i].RenameTo
+		}
+	}
+	return typeName
+}
+
+func (t *TypeConfigurations) RenameTypeNameOnMatchBytes(typeName []byte) []byte {
+	str := string(typeName)
+	for i := range *t {
+		if (*t)[i].TypeName == str {
+			return []byte((*t)[i].RenameTo)
+		}
+	}
+	return typeName
+}
+
+type TypeConfiguration struct {
+	TypeName string
+	// RenameTo modifies the TypeName
+	// so that a downstream Operation can contain a different TypeName than the upstream Schema
+	// e.g. if the downstream Operation contains { ... on Human_api { height } }
+	// the upstream Operation can be rewritten to { ... on Human { height }}
+	// by setting RenameTo to Human
+	// This way, Types can be suffixed / renamed in downstream Schemas while keeping the contract with the upstream ok
+	RenameTo string
+}
+
+type FieldConfigurations []FieldConfiguration
+
+func (f FieldConfigurations) ForTypeField(typeName, fieldName string) *FieldConfiguration {
+	for i := range f {
+		if f[i].TypeName == typeName && f[i].FieldName == fieldName {
+			return &f[i]
+		}
+	}
+	return nil
+}
+
+type FieldConfiguration struct {
+	TypeName  string
+	FieldName string
+	// DisableDefaultMapping - instructs planner whether to use path mapping coming from Path field
+	DisableDefaultMapping bool // TODO: has no effect as of now, remove?
+	// Path - represents a json path to lookup for a field value in response json
+	Path      []string
+	Arguments ArgumentsConfigurations
+	// UnescapeResponseJson set to true will allow fields (String,List,Object)
+	// to be resolved from an escaped JSON string
+	// e.g. {"response":"{\"foo\":\"bar\"}"} will be returned as {"foo":"bar"} when path is "response"
+	// This way, it is possible to resolve a JSON string as part of the response without extra String encoding of the JSON
+	UnescapeResponseJson bool
+	// HasAuthorizationRule needs to be set to true if the Authorizer should be called for this field
+	HasAuthorizationRule bool
+
+	SubscriptionFilterCondition *SubscriptionFilterCondition
+}
+
+type SubscriptionFilterCondition struct {
+	And []SubscriptionFilterCondition
+	Or  []SubscriptionFilterCondition
+	Not *SubscriptionFilterCondition
+	In  *SubscriptionFieldCondition
+}
+
+type SubscriptionFieldCondition struct {
+	FieldPath []string
+	Values    []string
+}
+
+type ArgumentsConfigurations []ArgumentConfiguration
+
+func (a ArgumentsConfigurations) ForName(argName string) *ArgumentConfiguration {
+	for i := range a {
+		if a[i].Name == argName {
+			return &a[i]
+		}
+	}
+	return nil
+}
+
+// SourceType is used to determine the source of an argument
+type SourceType string
+
+const (
+	ObjectFieldSource   SourceType = "object_field"
+	FieldArgumentSource SourceType = "field_argument"
+)
+
+// ArgumentRenderConfig is used to determine how an argument should be rendered
+type ArgumentRenderConfig string
+
+const (
+	RenderArgumentDefault        ArgumentRenderConfig = ""
+	RenderArgumentAsArrayCSV     ArgumentRenderConfig = "render_argument_as_array_csv"
+	RenderArgumentAsGraphQLValue ArgumentRenderConfig = "render_argument_as_graphql_value"
+	RenderArgumentAsJSONValue    ArgumentRenderConfig = "render_argument_as_json_value"
+)
+
+type ArgumentConfiguration struct {
+	Name         string
+	SourceType   SourceType
+	SourcePath   []string
+	RenderConfig ArgumentRenderConfig
+	RenameTypeTo string
+}

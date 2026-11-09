@@ -1,0 +1,1635 @@
+# Changelog
+
+## [2.30.6](https://github.com/wundergraph/graphql-go-tools/compare/v2.30.5...v2.30.6) (2026-11-05)
+
+
+### Bug Fixes
+
+* enabling planning when a key jump moves a field to another DS ([#1711](https://github.com/wundergraph/graphql-go-tools/issues/1711)) ([79b3bb6](https://github.com/wundergraph/graphql-go-tools/commit/79b3bb66a474663cf1cf25a1e0ec6e5bb69f1ad4))
+
+## [2.30.5](https://github.com/wundergraph/graphql-go-tools/compare/v2.30.4...v2.30.5) (2026-10-29)
+
+
+### Bug Fixes
+
+* encode nullable enum arguments as plain enums in gRPC requests ([#1745](https://github.com/wundergraph/graphql-go-tools/issues/1745)) ([f7e0879](https://github.com/wundergraph/graphql-go-tools/commit/f7e08795cee45a5a6faa0b82ab4aeb7c97a65ec3))
+* **postprocess:** preserve parent type conditions on merged fields ([#1702](https://github.com/wundergraph/graphql-go-tools/issues/1702)) ([2108e49](https://github.com/wundergraph/graphql-go-tools/commit/2108e4983bb90de7bf985aafe61ce03c88f4a0af))
+* validate conditional [@defer](https://github.com/defer) and [@stream](https://github.com/stream) directives ([#1698](https://github.com/wundergraph/graphql-go-tools/issues/1698)) ([dbd0533](https://github.com/wundergraph/graphql-go-tools/commit/dbd0533afa796455be59e6b1bbdb261b7d372507))
+
+## [2.30.4](https://github.com/wundergraph/graphql-go-tools/compare/v2.30.3...v2.30.4) (2026-10-28)
+
+
+### Bug Fixes
+
+* allow same-shaped fields with different type names ([#1721](https://github.com/wundergraph/graphql-go-tools/issues/1721)) ([27860ee](https://github.com/wundergraph/graphql-go-tools/commit/27860eeba73c4b52defda2bf9ce46fcb5f8a539d))
+
+## [2.30.3](https://github.com/wundergraph/graphql-go-tools/compare/v2.30.2...v2.30.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* **engine:** validate variable values for Int type ([#1726](https://github.com/wundergraph/graphql-go-tools/issues/1726)) ([716174d](https://github.com/wundergraph/graphql-go-tools/commit/716174dfd94d8e2dff3a654f276ca046c96980ae))
+
+## [2.30.2](https://github.com/wundergraph/graphql-go-tools/compare/v2.30.1...v2.30.2) (2026-10-26)
+
+
+### Bug Fixes
+
+* entity calls with multiple requested types incorrectly filter representations ([#1733](https://github.com/wundergraph/graphql-go-tools/issues/1733)) ([b4089a2](https://github.com/wundergraph/graphql-go-tools/commit/b4089a2243f5b0deb23cdf88b9061237411d2685))
+* handle additional fields in entity calls ([#1732](https://github.com/wundergraph/graphql-go-tools/issues/1732)) ([af5ff7f](https://github.com/wundergraph/graphql-go-tools/commit/af5ff7f99019dba7c23671f9e8ce840144ea59d0))
+
+## [2.30.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.30.0...v2.30.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **caching:** store each surrogate key's tier with the entry ([#1728](https://github.com/wundergraph/graphql-go-tools/issues/1728)) ([4f75d1d](https://github.com/wundergraph/graphql-go-tools/commit/4f75d1da739748b7e95e83c669527cc9e70d6b6e))
+* connect improvements ([#1730](https://github.com/wundergraph/graphql-go-tools/issues/1730)) ([1a85045](https://github.com/wundergraph/graphql-go-tools/commit/1a850451e9e606c07e05c420ee2ec43997abb0ae))
+* **resolve:** release deduplicated followers when the leader panics ([#1718](https://github.com/wundergraph/graphql-go-tools/issues/1718)) ([dd2df85](https://github.com/wundergraph/graphql-go-tools/commit/dd2df85ccd392f9484b4c6353b67c48871937ba8))
+
+## [2.30.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.29.0...v2.30.0) (2026-10-21)
+
+
+### Features
+
+* add cursor support to engine ([#1716](https://github.com/wundergraph/graphql-go-tools/issues/1716)) ([2e677a0](https://github.com/wundergraph/graphql-go-tools/commit/2e677a0c9d44320cd31d3ea2ec76ddb16773c0ab))
+
+## [2.29.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.28.0...v2.29.0) (2026-10-19)
+
+
+### Features
+
+* add response cache data to request tracing ([#1712](https://github.com/wundergraph/graphql-go-tools/issues/1712)) ([bd541f9](https://github.com/wundergraph/graphql-go-tools/commit/bd541f941e07dfca3911d4485cb4dc3503452beb))
+
+
+### Bug Fixes
+
+* correctly plan nested field resolvers ([#1708](https://github.com/wundergraph/graphql-go-tools/issues/1708)) ([f9d4b65](https://github.com/wundergraph/graphql-go-tools/commit/f9d4b65aa88186fd34921334f17666102b8138bf))
+* handle null parents and aliases in field resolver responses ([#1714](https://github.com/wundergraph/graphql-go-tools/issues/1714)) ([9ef6e24](https://github.com/wundergraph/graphql-go-tools/commit/9ef6e244d2bf3dcf0c8ac155f403da3602a62e49))
+* plan field resolvers inside of required fields ([#1707](https://github.com/wundergraph/graphql-go-tools/issues/1707)) ([8cfa56b](https://github.com/wundergraph/graphql-go-tools/commit/8cfa56bf8049b88c53938a765e6a37a7db6627b7))
+* **resolve:** return an ordinary result when every defer is cancelled ([#1700](https://github.com/wundergraph/graphql-go-tools/issues/1700)) ([fa75a21](https://github.com/wundergraph/graphql-go-tools/commit/fa75a2199dce3e0924998f5ab29d09fd0d1b0b6b))
+
+## [2.28.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.27.0...v2.28.0) (2026-10-07)
+
+
+### Features
+
+* report what the response cache did for a fetch to the loader hooks ([#1692](https://github.com/wundergraph/graphql-go-tools/issues/1692)) ([40af042](https://github.com/wundergraph/graphql-go-tools/commit/40af0423c8939228e41ab2a129002a5c22fddffd))
+
+## [2.27.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.26.0...v2.27.0) (2026-10-07)
+
+
+### Features
+
+* wire proto messages with custom codec ([#1704](https://github.com/wundergraph/graphql-go-tools/issues/1704)) ([ba580a6](https://github.com/wundergraph/graphql-go-tools/commit/ba580a636e67851354a667f6c803b03338159216))
+
+
+### Bug Fixes
+
+* read remapped variables in subscription filter type check ([#1672](https://github.com/wundergraph/graphql-go-tools/issues/1672)) ([c8ae2e3](https://github.com/wundergraph/graphql-go-tools/commit/c8ae2e3bbd1e72be90ba6e4d007bd52190b180f1))
+
+## [2.26.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.25.0...v2.26.0) (2026-09-28)
+
+
+### Features
+
+* per-subgraph response cache options ([#1682](https://github.com/wundergraph/graphql-go-tools/issues/1682)) ([b060e9b](https://github.com/wundergraph/graphql-go-tools/commit/b060e9be16f1082c17db8d64b0c7ce98a62e599b))
+
+## [2.25.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.24.0...v2.25.0) (2026-09-24)
+
+
+### Features
+
+* bump Go version ([#1687](https://github.com/wundergraph/graphql-go-tools/issues/1687)) ([b692c2d](https://github.com/wundergraph/graphql-go-tools/commit/b692c2d1dcd07fea814b9d57dcc12395a3151e0b))
+
+## [2.24.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.23.0...v2.24.0) (2026-09-23)
+
+
+### Features
+
+* response cache Vary support ([#1675](https://github.com/wundergraph/graphql-go-tools/issues/1675)) ([b717953](https://github.com/wundergraph/graphql-go-tools/commit/b7179539ddfa4808a0ccefa12305ff86da0f9f49))
+
+## [2.23.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.22.1...v2.23.0) (2026-09-23)
+
+
+### Features
+
+* add selected field count to operation complexity estimates ([#1673](https://github.com/wundergraph/graphql-go-tools/issues/1673)) ([a163341](https://github.com/wundergraph/graphql-go-tools/commit/a1633415df276ad442babbbcbea22977bf4b7edf))
+
+## [2.22.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.22.0...v2.22.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* **sse_transport:** unregister context callbacks on subscription cleanup ([#1680](https://github.com/wundergraph/graphql-go-tools/issues/1680)) ([58aa6ad](https://github.com/wundergraph/graphql-go-tools/commit/58aa6ad9af02d019e77733e87bdab16cae5647fb))
+
+## [2.22.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.21.1...v2.22.0) (2026-09-20)
+
+
+### Features
+
+* private key support for response caching ([#1670](https://github.com/wundergraph/graphql-go-tools/issues/1670)) ([e953c61](https://github.com/wundergraph/graphql-go-tools/commit/e953c612c48250bfa102353d6ef4245abe113272))
+* router cache tag based invalidation for cdns ([#1662](https://github.com/wundergraph/graphql-go-tools/issues/1662)) ([19e37ab](https://github.com/wundergraph/graphql-go-tools/commit/19e37ab3c5468d809fb7c8ffe6b819faa16b3baf))
+
+## [2.21.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.21.0...v2.21.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* **subscriptionclient:** preserve SSE connection failure status ([#1676](https://github.com/wundergraph/graphql-go-tools/issues/1676)) ([09cfe13](https://github.com/wundergraph/graphql-go-tools/commit/09cfe131257e53d27e08ec02af100cc9342b5b38))
+
+## [2.21.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.20.3...v2.21.0) (2026-09-16)
+
+
+### Features
+
+* support caching in multi fetches ([#1656](https://github.com/wundergraph/graphql-go-tools/issues/1656)) ([2a6610f](https://github.com/wundergraph/graphql-go-tools/commit/2a6610f501b75644257283816d9082e220289c14))
+
+
+### Bug Fixes
+
+* propagate invalid variable JSON errors ([#1623](https://github.com/wundergraph/graphql-go-tools/issues/1623)) ([076a96f](https://github.com/wundergraph/graphql-go-tools/commit/076a96fdc86b25291ab707180f3f0bec3007d6ef))
+
+## [2.20.3](https://github.com/wundergraph/graphql-go-tools/compare/v2.20.2...v2.20.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* cache responses without public directive ([#1658](https://github.com/wundergraph/graphql-go-tools/issues/1658)) ([baf5ac1](https://github.com/wundergraph/graphql-go-tools/commit/baf5ac1e23daba6342c65da399c5ad8cc175943e))
+* correct operation depth for typed fragments ([#1648](https://github.com/wundergraph/graphql-go-tools/issues/1648)) ([dc2a685](https://github.com/wundergraph/graphql-go-tools/commit/dc2a685cf2e260187ce9e7ef8cf4a8bdb558ee51))
+* reset operation complexity state after aborted walk ([#1659](https://github.com/wundergraph/graphql-go-tools/issues/1659)) ([86ca248](https://github.com/wundergraph/graphql-go-tools/commit/86ca248c1331c8b632b3bc553cd16cd2415b3830)), closes [#1626](https://github.com/wundergraph/graphql-go-tools/issues/1626) [#1647](https://github.com/wundergraph/graphql-go-tools/issues/1647)
+
+## [2.20.2](https://github.com/wundergraph/graphql-go-tools/compare/v2.20.1...v2.20.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* **astvisitor:** detach error paths from reusable walker state ([#1661](https://github.com/wundergraph/graphql-go-tools/issues/1661)) ([8a9b7df](https://github.com/wundergraph/graphql-go-tools/commit/8a9b7dff001910a8f85c29c34c3c535db28d294b))
+
+## [2.20.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.20.0...v2.20.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* improve performance of orderSequenceByDependencies ([#1657](https://github.com/wundergraph/graphql-go-tools/issues/1657)) ([a0ea5b4](https://github.com/wundergraph/graphql-go-tools/commit/a0ea5b41bdcb807b0950b621ecc0488d997e0c45))
+
+## [2.20.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.19.0...v2.20.0) (2026-09-02)
+
+
+### Features
+
+* support cache tag creation via extensions in response from subgraphs ([#1650](https://github.com/wundergraph/graphql-go-tools/issues/1650)) ([da4c1b4](https://github.com/wundergraph/graphql-go-tools/commit/da4c1b4881f227623ff69e2ff59c6079f478dba2))
+
+## [2.19.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.18.0...v2.19.0) (2026-09-01)
+
+
+### Features
+
+* report TTL for subgraph and cached responses ([#1649](https://github.com/wundergraph/graphql-go-tools/issues/1649)) ([a5c085c](https://github.com/wundergraph/graphql-go-tools/commit/a5c085c48ed7007f042800843bb8c4f06720023e))
+
+## [2.18.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.17.0...v2.18.0) (2026-08-28)
+
+
+### Features
+
+* allow cached fetches to call loader hooks ([#1645](https://github.com/wundergraph/graphql-go-tools/issues/1645)) ([e890d88](https://github.com/wundergraph/graphql-go-tools/commit/e890d886e7d18ea7d99dc69861a8bd73acc8fc9e))
+* root query field caching ([#1643](https://github.com/wundergraph/graphql-go-tools/issues/1643)) ([54c993e](https://github.com/wundergraph/graphql-go-tools/commit/54c993e56ae7c88a14132ee636371e076efb6285))
+
+## [2.17.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.16.0...v2.17.0) (2026-08-21)
+
+
+### Features
+
+* response caching base implementation ([#1638](https://github.com/wundergraph/graphql-go-tools/issues/1638)) ([2691879](https://github.com/wundergraph/graphql-go-tools/commit/26918796d41b36478f75d6d3c92a8c550d3ca3aa))
+
+## [2.16.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.15.1...v2.16.0) (2026-08-13)
+
+
+### Features
+
+* implement multi fetch to the same subgraph ([#1594](https://github.com/wundergraph/graphql-go-tools/issues/1594)) ([22584e2](https://github.com/wundergraph/graphql-go-tools/commit/22584e2f691fffe29e8dd91d6e868826eeb55460))
+* schedule fetch trees optimally ([#1612](https://github.com/wundergraph/graphql-go-tools/issues/1612)) ([bd03deb](https://github.com/wundergraph/graphql-go-tools/commit/bd03deb2be134e7402fdd8c32b1d2ff3ae1376df))
+
+
+### Bug Fixes
+
+* check interface implementation in `potentiallySameObject` for nullability relaxation ([#1454](https://github.com/wundergraph/graphql-go-tools/issues/1454)) ([5bacb9e](https://github.com/wundergraph/graphql-go-tools/commit/5bacb9e75a5e23b1624519385440dd7ce45b8f0e))
+* improve handling of nullable lists for required fields ([#1631](https://github.com/wundergraph/graphql-go-tools/issues/1631)) ([0af4dd3](https://github.com/wundergraph/graphql-go-tools/commit/0af4dd310eba110873e48fa188238afeb4f2d942))
+
+## [2.15.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.15.0...v2.15.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* query planning time regression ([#1627](https://github.com/wundergraph/graphql-go-tools/issues/1627)) ([b90db54](https://github.com/wundergraph/graphql-go-tools/commit/b90db54de72311c4a0c96cb9c2672bbd5079e71c))
+
+## [2.15.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.14.2...v2.15.0) (2026-08-09)
+
+
+### Features
+
+* entitycache cache interface ([#1618](https://github.com/wundergraph/graphql-go-tools/issues/1618)) ([7ca8900](https://github.com/wundergraph/graphql-go-tools/commit/7ca89002d93cc7b446d62df2093ee50895267382))
+
+
+### Bug Fixes
+
+* add planner edge case fixes ([#1581](https://github.com/wundergraph/graphql-go-tools/issues/1581)) ([165b1f5](https://github.com/wundergraph/graphql-go-tools/commit/165b1f51dacc0e815b429e451329957fd91e552b))
+
+## [2.14.2](https://github.com/wundergraph/graphql-go-tools/compare/v2.14.1...v2.14.2) (2026-07-31)
+
+
+### Bug Fixes
+
+* incorrect type detection for abstract types ([#1613](https://github.com/wundergraph/graphql-go-tools/issues/1613)) ([e249e88](https://github.com/wundergraph/graphql-go-tools/commit/e249e882db4d5768b1661b99f92d070c55d987da))
+
+## [2.14.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.14.0...v2.14.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* incorrect alias behavior for required fields ([#1604](https://github.com/wundergraph/graphql-go-tools/issues/1604)) ([5752e91](https://github.com/wundergraph/graphql-go-tools/commit/5752e914cc6f88ce2fa9a3143712ede705c92226))
+
+## [2.14.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.13.2...v2.14.0) (2026-07-21)
+
+
+### Features
+
+* add AllowStringLiteralsForEnums option to validator ([#1608](https://github.com/wundergraph/graphql-go-tools/issues/1608)) ([0771feb](https://github.com/wundergraph/graphql-go-tools/commit/0771febd0d27faf4878d32ef7a2d93d547989434))
+
+## [2.13.2](https://github.com/wundergraph/graphql-go-tools/compare/v2.13.1...v2.13.2) (2026-07-17)
+
+
+### Bug Fixes
+
+* accept empty lists for non-null list items ([#1600](https://github.com/wundergraph/graphql-go-tools/issues/1600)) ([bd86537](https://github.com/wundergraph/graphql-go-tools/commit/bd8653780bdc702fdcd11a449a254509c62c2b5e))
+
+## [2.13.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.13.0...v2.13.1) (2026-07-17)
+
+
+### Bug Fixes
+
+* improve ast rewriter field provenance ([#1587](https://github.com/wundergraph/graphql-go-tools/issues/1587)) ([ee8555b](https://github.com/wundergraph/graphql-go-tools/commit/ee8555b374e4682ab72f1b73f73cdafc142decab))
+
+## [2.13.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.12.1...v2.13.0) (2026-07-17)
+
+
+### Features
+
+* improve abstract field validation ([#1588](https://github.com/wundergraph/graphql-go-tools/issues/1588)) ([d6cceac](https://github.com/wundergraph/graphql-go-tools/commit/d6cceacd291eee5dbab8f6a0cadd245e47eca2d0))
+
+## [2.12.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.12.0...v2.12.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* resolve buffer not been cleared ([#1590](https://github.com/wundergraph/graphql-go-tools/issues/1590)) ([9b86c3d](https://github.com/wundergraph/graphql-go-tools/commit/9b86c3df092d457ade573dda6ae115ebddf9f5bb))
+
+## [2.12.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.11.0...v2.12.0) (2026-07-15)
+
+
+### Features
+
+* add new visitor for inline arguments validation ([#1577](https://github.com/wundergraph/graphql-go-tools/issues/1577)) ([fce54b2](https://github.com/wundergraph/graphql-go-tools/commit/fce54b27473aee1b7d03d7a86a14b083543632b7))
+
+## [2.11.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.10.0...v2.11.0) (2026-07-13)
+
+
+### Features
+
+* **grpc_datasource:** add ConnectRPC transport implementation ([#1509](https://github.com/wundergraph/graphql-go-tools/issues/1509)) ([a2038d2](https://github.com/wundergraph/graphql-go-tools/commit/a2038d2b3585204468ab218d6d15b863c841e249))
+
+## [2.10.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.9.2...v2.10.0) (2026-07-09)
+
+
+### Features
+
+* **resolve:** add opt-in pre-fetch field authorization mode ([#1561](https://github.com/wundergraph/graphql-go-tools/issues/1561)) ([eb3b142](https://github.com/wundergraph/graphql-go-tools/commit/eb3b1420a219c5ee431dc432ed5e2101a9fe57ad))
+
+
+### Bug Fixes
+
+* do not charge actual cost for denied fields ([#1582](https://github.com/wundergraph/graphql-go-tools/issues/1582)) ([00d9f66](https://github.com/wundergraph/graphql-go-tools/commit/00d9f66ff0d6af5c7b02862806b6090f77e87dd4))
+
+## [2.9.2](https://github.com/wundergraph/graphql-go-tools/compare/v2.9.1...v2.9.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **grpc_datasource:** resolve context path segments across repeated message fields ([#1579](https://github.com/wundergraph/graphql-go-tools/issues/1579)) ([2fea190](https://github.com/wundergraph/graphql-go-tools/commit/2fea19098395b98b5ad4094d95a2f2fd70664d36))
+
+## [2.9.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.9.0...v2.9.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* do not charge children of null-parents ([#1574](https://github.com/wundergraph/graphql-go-tools/issues/1574)) ([cf436ec](https://github.com/wundergraph/graphql-go-tools/commit/cf436ec42bd6d5755429d93f8bcd5ea6ccb88be5))
+
+## [2.9.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.8.0...v2.9.0) (2026-07-06)
+
+
+### Features
+
+* add flag SkipNullVariablesError ([#1550](https://github.com/wundergraph/graphql-go-tools/issues/1550)) ([43e0087](https://github.com/wundergraph/graphql-go-tools/commit/43e00874da9edbc0a6eefa921a888c3f0edfa643))
+* support requires for conflicting arguments ([#1566](https://github.com/wundergraph/graphql-go-tools/issues/1566)) ([979ee23](https://github.com/wundergraph/graphql-go-tools/commit/979ee23f62a6d4ca9d7b4c8d1915671a53dc02b2))
+
+## [2.8.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.7.0...v2.8.0) (2026-07-02)
+
+
+### Features
+
+* add defer support part 4 ([#1547](https://github.com/wundergraph/graphql-go-tools/issues/1547)) ([8891a0e](https://github.com/wundergraph/graphql-go-tools/commit/8891a0e9e606a3b3055e671a48a9e7bbc5a928ea))
+
+## [2.7.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.6.0...v2.7.0) (2026-07-02)
+
+
+### Features
+
+* expose concurrency limits and inflight resolves ([#1501](https://github.com/wundergraph/graphql-go-tools/issues/1501)) ([c9af890](https://github.com/wundergraph/graphql-go-tools/commit/c9af890f1e51726c1b46f426e6392cededf5d232))
+
+
+### Bug Fixes
+
+* fix provides on abstract types ([#1564](https://github.com/wundergraph/graphql-go-tools/issues/1564)) ([8244558](https://github.com/wundergraph/graphql-go-tools/commit/8244558da7c05192c6a238b9f1a843c88e03fe38))
+
+## [2.6.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.5.1...v2.6.0) (2026-07-02)
+
+
+### Features
+
+* add SubscriptionOnCreate hook ([#1538](https://github.com/wundergraph/graphql-go-tools/issues/1538)) ([3f30cb2](https://github.com/wundergraph/graphql-go-tools/commit/3f30cb240926ceff846c6ca5be7cd580408f60bb))
+
+
+### Bug Fixes
+
+* allow provides on abstract types ([#1552](https://github.com/wundergraph/graphql-go-tools/issues/1552)) ([fb2d52a](https://github.com/wundergraph/graphql-go-tools/commit/fb2d52a852bdeb53bd988f9d8000734f7297562b))
+
+## [2.5.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.5.0...v2.5.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* fix variables default value extraction panic on non list variable type ([#1553](https://github.com/wundergraph/graphql-go-tools/issues/1553)) ([ac5922e](https://github.com/wundergraph/graphql-go-tools/commit/ac5922ed8e6bf861554997ddc30c5deb47388387))
+
+## [2.5.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.6...v2.5.0) (2026-06-18)
+
+
+### Features
+
+* enable to ignore cost weights on implementing types ([#1542](https://github.com/wundergraph/graphql-go-tools/issues/1542)) ([1ade300](https://github.com/wundergraph/graphql-go-tools/commit/1ade300421bcb1b68cefd63fc5268f19ee56336c))
+
+
+### Bug Fixes
+
+* **cost:** determine correctly the type of list-wrapped scalars and enums ([#1546](https://github.com/wundergraph/graphql-go-tools/issues/1546)) ([2575480](https://github.com/wundergraph/graphql-go-tools/commit/2575480b966074a887db1f96ee8a0ef2022effcd))
+* remove connections from transport connection pool ([#1541](https://github.com/wundergraph/graphql-go-tools/issues/1541)) ([ca47200](https://github.com/wundergraph/graphql-go-tools/commit/ca472008b0a4f9ac5601c4d42266cd2e4cae8cec))
+* **resolve:** fix GC-liveness bug in the loadBatchEntityFetch ([#1536](https://github.com/wundergraph/graphql-go-tools/issues/1536)) ([2ad6fc4](https://github.com/wundergraph/graphql-go-tools/commit/2ad6fc4cc2195d216a6ec7003fac3352d01ff0ad))
+
+## [2.4.6](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.5...v2.4.6) (2026-06-12)
+
+
+### Bug Fixes
+
+* **pubsub:** fix inefficient trigger id generation ([#1531](https://github.com/wundergraph/graphql-go-tools/issues/1531)) ([595681c](https://github.com/wundergraph/graphql-go-tools/commit/595681ced0d0adb6422da5bbd54439a18f610cd7))
+
+## [2.4.5](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.4...v2.4.5) (2026-06-11)
+
+
+### Bug Fixes
+
+* bump go-arena to v1.3.0 ([#1532](https://github.com/wundergraph/graphql-go-tools/issues/1532)) ([a4eb7d8](https://github.com/wundergraph/graphql-go-tools/commit/a4eb7d8a1fb34eb7e65ed351a973b7eeea08bc0c))
+
+## [2.4.4](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.3...v2.4.4) (2026-06-08)
+
+
+### Bug Fixes
+
+* fallback to abstract name if no __typename was sent ([#1527](https://github.com/wundergraph/graphql-go-tools/issues/1527)) ([2548d5a](https://github.com/wundergraph/graphql-go-tools/commit/2548d5ac8d4ba8d2869255e82eb2e8595032bba7))
+* **jsonschema:** root variables object is always a non-nullable "object" ([#1528](https://github.com/wundergraph/graphql-go-tools/issues/1528)) ([8327b53](https://github.com/wundergraph/graphql-go-tools/commit/8327b531bc4ae6629ae337dde0fb85fe948530db))
+
+## [2.4.3](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.2...v2.4.3) (2026-06-05)
+
+
+### Bug Fixes
+
+* calculate costs for abstract fields without double counting ([#1521](https://github.com/wundergraph/graphql-go-tools/issues/1521)) ([4175a9e](https://github.com/wundergraph/graphql-go-tools/commit/4175a9e1168ca0ac4a3c98dba1184a23ad69d8cc))
+* **jsonschema:** align nullability with JSON Schema 2020-12 ([#1518](https://github.com/wundergraph/graphql-go-tools/issues/1518)) ([6fcdf8c](https://github.com/wundergraph/graphql-go-tools/commit/6fcdf8c07098081cd390f82d06d36c7e0e56e62c))
+
+## [2.4.2](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.1...v2.4.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* **astprinter:** preserve description indentation and break prose-bearing field args ([#1500](https://github.com/wundergraph/graphql-go-tools/issues/1500)) ([d81c9a7](https://github.com/wundergraph/graphql-go-tools/commit/d81c9a7b6689e98a985afc645b2527e1aec7703c))
+* bump grpc to v1.80.0 ([#1511](https://github.com/wundergraph/graphql-go-tools/issues/1511)) ([5c2debf](https://github.com/wundergraph/graphql-go-tools/commit/5c2debfdd83a02ccc08468fe508540100624c177))
+* **jsonschema:** emit $ref/$defs for recursive input types ([#1513](https://github.com/wundergraph/graphql-go-tools/issues/1513)) ([1369a25](https://github.com/wundergraph/graphql-go-tools/commit/1369a25643a280a08e11ac8a12adef4505184e5b))
+
+## [2.4.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.4.0...v2.4.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* use float64 for intermediate cost calculations ([#1514](https://github.com/wundergraph/graphql-go-tools/issues/1514)) ([d415ae5](https://github.com/wundergraph/graphql-go-tools/commit/d415ae5b6940b26386dd1d0047910b18528a8637))
+
+## [2.4.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.3.1...v2.4.0) (2026-05-21)
+
+
+### Features
+
+* **grpc_datasource:** introduce RPCTransport abstraction with gRPC implementation ([#1490](https://github.com/wundergraph/graphql-go-tools/issues/1490)) ([faffd81](https://github.com/wundergraph/graphql-go-tools/commit/faffd819a6154943222c5c3e8cb016387e916df4))
+
+
+### Bug Fixes
+
+* use remapped variables in cost calculation ([#1505](https://github.com/wundergraph/graphql-go-tools/issues/1505)) ([972ad0f](https://github.com/wundergraph/graphql-go-tools/commit/972ad0f7e38c9201784293a09cdefd6c50d67fc9))
+
+## [2.3.1](https://github.com/wundergraph/graphql-go-tools/compare/v2.3.0...v2.3.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* handle default values for slicingArguments ([#1499](https://github.com/wundergraph/graphql-go-tools/issues/1499)) ([f3afd10](https://github.com/wundergraph/graphql-go-tools/commit/f3afd102f5304f43efd146ec68679de1b967b680))
+* multiply with 0 for empty lists in actual costs ([#1502](https://github.com/wundergraph/graphql-go-tools/issues/1502)) ([1cb6bde](https://github.com/wundergraph/graphql-go-tools/commit/1cb6bde9f169efd5be4cad7f0be5535fd07493cc))
+
+## [2.3.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.2.0...v2.3.0) (2026-05-15)
+
+
+### Features
+
+* support dot-path in slicingArguments ([#1485](https://github.com/wundergraph/graphql-go-tools/issues/1485)) ([2cb8d5e](https://github.com/wundergraph/graphql-go-tools/commit/2cb8d5eee1aa8ef697868cbe323ebd1160fc3319))
+
+
+### Bug Fixes
+
+* find proper parent when sizedFields parent is a non-list wrapper ([#1493](https://github.com/wundergraph/graphql-go-tools/issues/1493)) ([6b96976](https://github.com/wundergraph/graphql-go-tools/commit/6b96976de1f1e457ee1cd5ff14039776e12f2ad0)), closes [#1492](https://github.com/wundergraph/graphql-go-tools/issues/1492)
+
+## [2.2.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.1.0...v2.2.0) (2026-05-12)
+
+
+### Features
+
+* add Description support for VariableDefinition (September 2025 spec) ([#1457](https://github.com/wundergraph/graphql-go-tools/issues/1457)) ([b035eea](https://github.com/wundergraph/graphql-go-tools/commit/b035eea9957414d9f7a1f0d6577d1b5a8a8ec650))
+* allow rendering custom extensions in the final JSON response ([#1489](https://github.com/wundergraph/graphql-go-tools/issues/1489)) ([e6f080e](https://github.com/wundergraph/graphql-go-tools/commit/e6f080ea6d937ef97b8cfb44370f2a479681b1cc))
+* switch from composition-go wrapper to cosmo wgc composition ([#1483](https://github.com/wundergraph/graphql-go-tools/issues/1483)) ([34d07fc](https://github.com/wundergraph/graphql-go-tools/commit/34d07fc6106dbedf6e95939595b2fb71430b47f1))
+
+## [2.1.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0...v2.1.0) (2026-04-30)
+
+
+### Features
+
+* subscriptions overhaul ([#1374](https://github.com/wundergraph/graphql-go-tools/issues/1374)) ([6c0ac71](https://github.com/wundergraph/graphql-go-tools/commit/6c0ac71e071abf06fdf618d45d100769f0017acd))
+
+## [2.0.0](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.270...v2.0.0) (2026-04-27)
+
+
+### Features
+
+* support costs on arguments of directives ([#1465](https://github.com/wundergraph/graphql-go-tools/issues/1465)) ([2eca1ab](https://github.com/wundergraph/graphql-go-tools/commit/2eca1ab9932395d9b3181d28e8e6c2c03818f68b))
+
+
+### Bug Fixes
+
+* grpc datasource stack overflows on recursive input ([#1466](https://github.com/wundergraph/graphql-go-tools/issues/1466)) ([eba0f58](https://github.com/wundergraph/graphql-go-tools/commit/eba0f58ff241520a8b66fc206c41ff73d8f33d03))
+
+## [2.0.0-rc.270](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.269...v2.0.0-rc.270) (2026-04-09)
+
+
+### Bug Fixes
+
+* entity null fetch produces resolver error ([#1379](https://github.com/wundergraph/graphql-go-tools/issues/1379)) ([a753eb3](https://github.com/wundergraph/graphql-go-tools/commit/a753eb3320b4e969bb9d80308188751c3c15db73))
+
+## [2.0.0-rc.269](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.268...v2.0.0-rc.269) (2026-04-08)
+
+
+### Features
+
+* handle recursion for arguments containing input objects ([#1461](https://github.com/wundergraph/graphql-go-tools/issues/1461)) ([ba21793](https://github.com/wundergraph/graphql-go-tools/commit/ba21793c75bdd68a1f6bf70583cc09cbd767139b))
+
+## [2.0.0-rc.268](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.267...v2.0.0-rc.268) (2026-04-07)
+
+
+### Features
+
+* add support for fields with arguments and requires directive ([#1452](https://github.com/wundergraph/graphql-go-tools/issues/1452)) ([58469c3](https://github.com/wundergraph/graphql-go-tools/commit/58469c39c9f9b2c610bbe36febb6cd7fce319127))
+
+## [2.0.0-rc.267](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.266...v2.0.0-rc.267) (2026-03-26)
+
+
+### Features
+
+* check slicing Arguments passed when requireOneSlicingArgument ([#1456](https://github.com/wundergraph/graphql-go-tools/issues/1456)) ([72c181f](https://github.com/wundergraph/graphql-go-tools/commit/72c181f8a5316f974985bcd2c7f364bf3fdc997c))
+
+## [2.0.0-rc.266](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.265...v2.0.0-rc.266) (2026-03-26)
+
+
+### Features
+
+* add support for composite types in go-tools ([#1448](https://github.com/wundergraph/graphql-go-tools/issues/1448)) ([646ea97](https://github.com/wundergraph/graphql-go-tools/commit/646ea972487408214377ddd7014a53337da7ad04))
+
+
+### Bug Fixes
+
+* preserve nullable nested input presence in gRPC compiler ([#1447](https://github.com/wundergraph/graphql-go-tools/issues/1447)) ([900d450](https://github.com/wundergraph/graphql-go-tools/commit/900d450cebe0dc05d74d0aec2b5b28c71bb55005))
+
+## [2.0.0-rc.265](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.264...v2.0.0-rc.265) (2026-03-17)
+
+
+### Bug Fixes
+
+* display correct multiplier for non-list fields ([#1449](https://github.com/wundergraph/graphql-go-tools/issues/1449)) ([cba8401](https://github.com/wundergraph/graphql-go-tools/commit/cba84017d1ebbcec5a3f510f0c59f59527777b3e))
+
+## [2.0.0-rc.264](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.263...v2.0.0-rc.264) (2026-03-13)
+
+
+### Features
+
+* support sizedFields in cost computations ([#1410](https://github.com/wundergraph/graphql-go-tools/issues/1410)) ([48f7582](https://github.com/wundergraph/graphql-go-tools/commit/48f75821b0d7e0ffb5f7e66cffba3d1ad0cbf9dc))
+
+## [2.0.0-rc.263](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.262...v2.0.0-rc.263) (2026-03-13)
+
+
+### Features
+
+* support field resolvers with empty arguments ([#1440](https://github.com/wundergraph/graphql-go-tools/issues/1440)) ([58305bc](https://github.com/wundergraph/graphql-go-tools/commit/58305bc61a774e0ced6def84f63f75f5c4556dc8))
+
+## [2.0.0-rc.262](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.261...v2.0.0-rc.262) (2026-03-10)
+
+
+### Features
+
+* add initial support for [@requires](https://github.com/requires) in gRPC ([#1362](https://github.com/wundergraph/graphql-go-tools/issues/1362)) ([07ae75e](https://github.com/wundergraph/graphql-go-tools/commit/07ae75ea00583b6209f39d182d8287ad2eea7e98))
+
+## [2.0.0-rc.261](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.260...v2.0.0-rc.261) (2026-03-06)
+
+
+### Bug Fixes
+
+* fix selecting parent of unique nodes ([#1430](https://github.com/wundergraph/graphql-go-tools/issues/1430)) ([fd0e06a](https://github.com/wundergraph/graphql-go-tools/commit/fd0e06afa472a4c069f429c3c73e442831ed4b19))
+
+## [2.0.0-rc.260](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.259...v2.0.0-rc.260) (2026-03-05)
+
+
+### Bug Fixes
+
+* invalid data resolution for null parent types ([#1428](https://github.com/wundergraph/graphql-go-tools/issues/1428)) ([b7863be](https://github.com/wundergraph/graphql-go-tools/commit/b7863bed652a9324c0b1d02b3b11ce548c1b8fcc))
+
+## [2.0.0-rc.259](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.258...v2.0.0-rc.259) (2026-03-05)
+
+
+### Bug Fixes
+
+* skip invocation for empty context in field resolvers ([#1413](https://github.com/wundergraph/graphql-go-tools/issues/1413)) ([5885c48](https://github.com/wundergraph/graphql-go-tools/commit/5885c48066c696e60a70bf3ab4b10a824eca780a))
+
+## [2.0.0-rc.258](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.257...v2.0.0-rc.258) (2026-03-05)
+
+
+### Bug Fixes
+
+* handle complex types inside inline fragments in gRPC execution plan ([#1411](https://github.com/wundergraph/graphql-go-tools/issues/1411)) ([3b4dbcb](https://github.com/wundergraph/graphql-go-tools/commit/3b4dbcb2df54dd6fd2bc51094e0fee12cf7fd9a0))
+
+## [2.0.0-rc.257](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.256...v2.0.0-rc.257) (2026-02-25)
+
+
+### Bug Fixes
+
+* keep order of error extension fields after sanitization ([#1407](https://github.com/wundergraph/graphql-go-tools/issues/1407)) ([e974cd3](https://github.com/wundergraph/graphql-go-tools/commit/e974cd34d03fdcb10f36d2b636981700a2c20450))
+
+## [2.0.0-rc.256](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.255...v2.0.0-rc.256) (2026-02-23)
+
+
+### Bug Fixes
+
+* propagate actualListSizes via resolver context ([#1404](https://github.com/wundergraph/graphql-go-tools/issues/1404)) ([5433fcb](https://github.com/wundergraph/graphql-go-tools/commit/5433fcb28732115e451c9dfeb70dc13de62cda33))
+
+## [2.0.0-rc.255](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.254...v2.0.0-rc.255) (2026-02-21)
+
+
+### Bug Fixes
+
+* **resolve:** fix mutation-during-iteration bug in optionallyAllowCustomExtensionProperties ([#1402](https://github.com/wundergraph/graphql-go-tools/issues/1402)) ([4c4bfc8](https://github.com/wundergraph/graphql-go-tools/commit/4c4bfc8aa04c0059fc2956cc5794ada6d1a12997))
+
+## [2.0.0-rc.254](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.253...v2.0.0-rc.254) (2026-02-20)
+
+
+### Features
+
+* **resolve:** update astjson to arena-safe API, remove redundant copies ([#1400](https://github.com/wundergraph/graphql-go-tools/issues/1400)) ([850ce6e](https://github.com/wundergraph/graphql-go-tools/commit/850ce6e49f4d5c630630e27ec27f49e7a3283a23))
+
+## [2.0.0-rc.253](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.252...v2.0.0-rc.253) (2026-02-19)
+
+
+### Features
+
+* compute dynamic (actual) cost ([#1376](https://github.com/wundergraph/graphql-go-tools/issues/1376)) ([d6dc786](https://github.com/wundergraph/graphql-go-tools/commit/d6dc786c0505e396b9fab3adbee0c11693b1a123))
+
+## [2.0.0-rc.252](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.251...v2.0.0-rc.252) (2026-02-19)
+
+
+### Features
+
+* forward headers to grpc subgraphs ([#1382](https://github.com/wundergraph/graphql-go-tools/issues/1382)) ([8459b34](https://github.com/wundergraph/graphql-go-tools/commit/8459b349eb80b75ae3d90f0df5dfe45bc0e1cea8))
+
+
+### Bug Fixes
+
+* **resolve:** fix flaky singleflight deduplication tests ([#1393](https://github.com/wundergraph/graphql-go-tools/issues/1393)) ([4105082](https://github.com/wundergraph/graphql-go-tools/commit/41050822e677ec4f1e04b4541f078a976ffbee15))
+* **resolve:** guard OnFinished against nil loaderHookContext on skipped fetches ([#1394](https://github.com/wundergraph/graphql-go-tools/issues/1394)) ([f79d071](https://github.com/wundergraph/graphql-go-tools/commit/f79d07105440ee2f59242dff7e81e909b550a9d6))
+
+## [2.0.0-rc.251](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.250...v2.0.0-rc.251) (2026-02-18)
+
+
+### Bug Fixes
+
+* **resolve:** share response headers with singleflight followers ([#1389](https://github.com/wundergraph/graphql-go-tools/issues/1389)) ([ed80a8e](https://github.com/wundergraph/graphql-go-tools/commit/ed80a8e581935241834422414686aa3c31471dc0))
+
+## [2.0.0-rc.250](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.249...v2.0.0-rc.250) (2026-02-16)
+
+
+### Features
+
+* add flag for relaxed nullability checks on same shape ([#1378](https://github.com/wundergraph/graphql-go-tools/issues/1378)) ([6be2e74](https://github.com/wundergraph/graphql-go-tools/commit/6be2e74036a027f44adaff7f6bfbdbce1d1fb03b))
+
+## [2.0.0-rc.249](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.248...v2.0.0-rc.249) (2026-02-13)
+
+
+### Bug Fixes
+
+* ensure GC safety for arena-allocated string values ([#1383](https://github.com/wundergraph/graphql-go-tools/issues/1383)) ([608be72](https://github.com/wundergraph/graphql-go-tools/commit/608be72c12b7e308a4134d3a7fe1205f7f491bf5))
+
+## [2.0.0-rc.248](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.247...v2.0.0-rc.248) (2026-02-11)
+
+
+### Bug Fixes
+
+* requires is not ignored when all fields provided ([#1380](https://github.com/wundergraph/graphql-go-tools/issues/1380)) ([31d9d45](https://github.com/wundergraph/graphql-go-tools/commit/31d9d456c90b5575f7c0d49a40feb3f931ba1b3b))
+
+## [2.0.0-rc.247](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.246...v2.0.0-rc.247) (2026-02-06)
+
+
+### Features
+
+* improve memory management & request deduplication ([#1336](https://github.com/wundergraph/graphql-go-tools/issues/1336)) ([938d1a9](https://github.com/wundergraph/graphql-go-tools/commit/938d1a9e13ef066fb514eb149e9aa44b886030c5))
+
+## [2.0.0-rc.246](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.245...v2.0.0-rc.246) (2026-01-27)
+
+
+### Features
+
+* compute static costs ([#1359](https://github.com/wundergraph/graphql-go-tools/issues/1359)) ([004f68e](https://github.com/wundergraph/graphql-go-tools/commit/004f68e2253c9f2ae9d20aa4488041c7551c84d7))
+
+## [2.0.0-rc.245](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.244...v2.0.0-rc.245) (2026-01-26)
+
+
+### Bug Fixes
+
+* concurrent access of the grpc datasource ([#1370](https://github.com/wundergraph/graphql-go-tools/issues/1370)) ([1875e64](https://github.com/wundergraph/graphql-go-tools/commit/1875e647a930117eec1882e94b1579dbbe19d3c9))
+
+## [2.0.0-rc.244](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.243...v2.0.0-rc.244) (2026-01-26)
+
+
+### Bug Fixes
+
+* incorrect field resolver path ([#1363](https://github.com/wundergraph/graphql-go-tools/issues/1363)) ([46544dc](https://github.com/wundergraph/graphql-go-tools/commit/46544dc9bf1a8cbd61ad2505a34cef0e71e59f3b))
+
+## [2.0.0-rc.243](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.242...v2.0.0-rc.243) (2026-01-20)
+
+
+### Bug Fixes
+
+* planner fixes for abstract selection rewriter, node selection rules ([#1360](https://github.com/wundergraph/graphql-go-tools/issues/1360)) ([7baca8b](https://github.com/wundergraph/graphql-go-tools/commit/7baca8bdf718f0aaaa869902456d609838122657))
+
+## [2.0.0-rc.242](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.241...v2.0.0-rc.242) (2025-12-19)
+
+
+### Bug Fixes
+
+* skip invalid locations ([#1357](https://github.com/wundergraph/graphql-go-tools/issues/1357)) ([5154906](https://github.com/wundergraph/graphql-go-tools/commit/515490670712e61910e346c6d43b500a5b90c6a2))
+
+## [2.0.0-rc.241](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.240...v2.0.0-rc.241) (2025-12-10)
+
+
+### Bug Fixes
+
+* group subgraph errors by subgraph name ([#1351](https://github.com/wundergraph/graphql-go-tools/issues/1351)) ([d65d348](https://github.com/wundergraph/graphql-go-tools/commit/d65d3482f4e2fcbfeb05c194bf4141223411dfb4))
+
+## [2.0.0-rc.240](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.239...v2.0.0-rc.240) (2025-12-08)
+
+
+### Features
+
+* add composite type support for field resolvers ([#1341](https://github.com/wundergraph/graphql-go-tools/issues/1341)) ([701ea8d](https://github.com/wundergraph/graphql-go-tools/commit/701ea8d7d14b94b2767380bead8126d330dfb85e))
+* allow empty arguments for field resolvers ([#1350](https://github.com/wundergraph/graphql-go-tools/issues/1350)) ([5db8c5a](https://github.com/wundergraph/graphql-go-tools/commit/5db8c5a168b3fe5f8d937ddafbdbe8b04c587e73))
+
+## [2.0.0-rc.239](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.238...v2.0.0-rc.239) (2025-11-21)
+
+
+### Features
+
+* allows hook in the subscriptions ([#1309](https://github.com/wundergraph/graphql-go-tools/issues/1309)) ([79d7e79](https://github.com/wundergraph/graphql-go-tools/commit/79d7e799a5c8cfc808a9fd0be81f6467e4093714))
+
+
+### Bug Fixes
+
+* pin the correct version of sjson in v2 ([#1334](https://github.com/wundergraph/graphql-go-tools/issues/1334)) ([0009898](https://github.com/wundergraph/graphql-go-tools/commit/00098980bf690a39dc6dbab64426f61387121e4b))
+
+## [2.0.0-rc.238](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.237...v2.0.0-rc.238) (2025-11-17)
+
+
+### Bug Fixes
+
+* add ability to exclude introspection queries from complexity limits ([#1342](https://github.com/wundergraph/graphql-go-tools/issues/1342)) ([19c8693](https://github.com/wundergraph/graphql-go-tools/commit/19c86930482956b2d5f96f2feae6d015d1052ef4))
+
+## [2.0.0-rc.237](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.236...v2.0.0-rc.237) (2025-10-31)
+
+
+### Features
+
+* add support for field resolvers ([#1323](https://github.com/wundergraph/graphql-go-tools/issues/1323)) ([0e3c00f](https://github.com/wundergraph/graphql-go-tools/commit/0e3c00f7498c95ba979fe0a96fd1072deb9a2895))
+
+## [2.0.0-rc.236](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.235...v2.0.0-rc.236) (2025-10-31)
+
+
+### Bug Fixes
+
+* fix conflict of rewriter and required fields ([#1338](https://github.com/wundergraph/graphql-go-tools/issues/1338)) ([03189bc](https://github.com/wundergraph/graphql-go-tools/commit/03189bc270a551c2875b3b01dbc11d166d703e4a))
+
+## [2.0.0-rc.235](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.234...v2.0.0-rc.235) (2025-10-29)
+
+
+### Bug Fixes
+
+* improve query planning time ([#1326](https://github.com/wundergraph/graphql-go-tools/issues/1326)) ([373cf2a](https://github.com/wundergraph/graphql-go-tools/commit/373cf2abf1459ded5997e5a84d1a282dc544844c))
+
+## [2.0.0-rc.234](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.233...v2.0.0-rc.234) (2025-10-24)
+
+
+### Features
+
+* september 2025 spec description support for `OperationDocument` and `Fragment` ([#1331](https://github.com/wundergraph/graphql-go-tools/issues/1331)) ([aedaf71](https://github.com/wundergraph/graphql-go-tools/commit/aedaf7183888ee0ccd76e3baaddf44dde03df701))
+
+## [2.0.0-rc.233](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.232...v2.0.0-rc.233) (2025-10-23)
+
+
+### Bug Fixes
+
+* omit introspection queries from complexity limits ([#1332](https://github.com/wundergraph/graphql-go-tools/issues/1332)) ([971a239](https://github.com/wundergraph/graphql-go-tools/commit/971a239d0ddc8b2378f81af82f0457f8eeea0db3))
+
+## [2.0.0-rc.232](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.231...v2.0.0-rc.232) (2025-10-22)
+
+
+### Bug Fixes
+
+* correct SSE datasource complete behaviour ([#1311](https://github.com/wundergraph/graphql-go-tools/issues/1311)) ([18c39e7](https://github.com/wundergraph/graphql-go-tools/commit/18c39e7d7e42086bb710d7dc757e32c4eeed94f9))
+
+## [2.0.0-rc.231](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.230...v2.0.0-rc.231) (2025-10-20)
+
+
+### Features
+
+* support the oneOf directive ([#1308](https://github.com/wundergraph/graphql-go-tools/issues/1308)) ([251cb02](https://github.com/wundergraph/graphql-go-tools/commit/251cb029a9e232f522ab3260db3d80942222ed2c))
+
+## [2.0.0-rc.230](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.229...v2.0.0-rc.230) (2025-10-09)
+
+
+### Bug Fixes
+
+* avoid duplicate joins on errors ([#1314](https://github.com/wundergraph/graphql-go-tools/issues/1314)) ([a1f1f8c](https://github.com/wundergraph/graphql-go-tools/commit/a1f1f8c1e68e4fce79135423adb7f7ad27feb570))
+* propagate fetch reasons for interface-related fields ([#1312](https://github.com/wundergraph/graphql-go-tools/issues/1312)) ([5ee3014](https://github.com/wundergraph/graphql-go-tools/commit/5ee3014edef13461fb1ef9e6297629f31ef6db7c))
+
+## [2.0.0-rc.229](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.228...v2.0.0-rc.229) (2025-09-25)
+
+
+### Bug Fixes
+
+* remove index after _entities in the path ([#1306](https://github.com/wundergraph/graphql-go-tools/issues/1306)) ([7d0586e](https://github.com/wundergraph/graphql-go-tools/commit/7d0586effc154fdfe6eddb949b46a2e58943b801))
+
+## [2.0.0-rc.228](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.227...v2.0.0-rc.228) (2025-09-24)
+
+
+### Features
+
+* validate presence of optional `@requires` dependencies ([#1297](https://github.com/wundergraph/graphql-go-tools/issues/1297)) ([ba75e25](https://github.com/wundergraph/graphql-go-tools/commit/ba75e25483165fa0172bad6c4504b0f48d94cd9b))
+
+## [2.0.0-rc.227](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.226...v2.0.0-rc.227) (2025-09-23)
+
+
+### Bug Fixes
+
+* if blocked, defer async event insertion to prevent deadlocks ([#1298](https://github.com/wundergraph/graphql-go-tools/issues/1298)) ([df38c31](https://github.com/wundergraph/graphql-go-tools/commit/df38c3121216ac5695f7f00ba1a810ebb879651e))
+
+## [2.0.0-rc.226](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.225...v2.0.0-rc.226) (2025-09-12)
+
+
+### Bug Fixes
+
+* detecting requires on interface members ([#1295](https://github.com/wundergraph/graphql-go-tools/issues/1295)) ([70bd5d5](https://github.com/wundergraph/graphql-go-tools/commit/70bd5d5b4f5d8442e488c0e1b4ed5e31f5113295))
+
+## [2.0.0-rc.225](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.224...v2.0.0-rc.225) (2025-09-09)
+
+
+### Features
+
+* add support of field selection reasons extensions ([#1282](https://github.com/wundergraph/graphql-go-tools/issues/1282)) ([37c9582](https://github.com/wundergraph/graphql-go-tools/commit/37c95820a5892935315b59aea99b6efe646cccfb))
+* upgrade all components to go 1.25 ([#1289](https://github.com/wundergraph/graphql-go-tools/issues/1289)) ([6bd2713](https://github.com/wundergraph/graphql-go-tools/commit/6bd27137a06e175f7987a1fed6debfe7c8f649af))
+
+
+### Bug Fixes
+
+* refactor CoordinateDependencies, FetchReasons ([#1293](https://github.com/wundergraph/graphql-go-tools/issues/1293)) ([cfebc16](https://github.com/wundergraph/graphql-go-tools/commit/cfebc16a2876fd94dbe50c08b5ede4688b0f2ec5))
+
+## [2.0.0-rc.224](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.223...v2.0.0-rc.224) (2025-09-01)
+
+
+### Bug Fixes
+
+* add sorting before creating the hash ([#1286](https://github.com/wundergraph/graphql-go-tools/issues/1286)) ([7fa9c50](https://github.com/wundergraph/graphql-go-tools/commit/7fa9c50ca1bf9e726ac2a04060d98c4b4a22d404))
+
+## [2.0.0-rc.223](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.222...v2.0.0-rc.223) (2025-08-28)
+
+
+### Features
+
+* improved subscription heartbeats ([#1269](https://github.com/wundergraph/graphql-go-tools/issues/1269)) ([4423d60](https://github.com/wundergraph/graphql-go-tools/commit/4423d60afd7bb8a58b193e31b61d7226d10dfd17))
+
+## [2.0.0-rc.222](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.221...v2.0.0-rc.222) (2025-08-27)
+
+
+### Bug Fixes
+
+* improve handling for invalid responses ([#1283](https://github.com/wundergraph/graphql-go-tools/issues/1283)) ([d656e91](https://github.com/wundergraph/graphql-go-tools/commit/d656e9185a9d94874ae7b0c103176c10b6a4f352))
+
+## [2.0.0-rc.221](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.220...v2.0.0-rc.221) (2025-08-21)
+
+
+### Bug Fixes
+
+* always close response body ([#1276](https://github.com/wundergraph/graphql-go-tools/issues/1276)) ([9069cc9](https://github.com/wundergraph/graphql-go-tools/commit/9069cc9b88bae6c64a9438bb08d6f5b4a5103c78))
+
+## [2.0.0-rc.220](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.219...v2.0.0-rc.220) (2025-08-13)
+
+
+### Features
+
+* rewrite abstract fragments for grpc ([#1268](https://github.com/wundergraph/graphql-go-tools/issues/1268)) ([ebe1e53](https://github.com/wundergraph/graphql-go-tools/commit/ebe1e533aedc63b5970f476cb1bf37e88c6c21c4))
+
+## [2.0.0-rc.219](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.218...v2.0.0-rc.219) (2025-08-08)
+
+
+### Features
+
+* add support for multiple key directives ([#1262](https://github.com/wundergraph/graphql-go-tools/issues/1262)) ([8535a92](https://github.com/wundergraph/graphql-go-tools/commit/8535a92f5b58e8f49330e9536ccdc39462a7142a))
+
+## [2.0.0-rc.218](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.217...v2.0.0-rc.218) (2025-08-07)
+
+
+### Bug Fixes
+
+* fix rewriting an interface object implementing interface ([#1265](https://github.com/wundergraph/graphql-go-tools/issues/1265)) ([8c8c9de](https://github.com/wundergraph/graphql-go-tools/commit/8c8c9deaccfb9b9657a0d2cef9923d9caaf94a61))
+
+## [2.0.0-rc.217](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.216...v2.0.0-rc.217) (2025-08-06)
+
+
+### Bug Fixes
+
+* add an option to ignore skip/include directives ([#1261](https://github.com/wundergraph/graphql-go-tools/issues/1261)) ([dfd6523](https://github.com/wundergraph/graphql-go-tools/commit/dfd65236170251c7e195015130da8b9eceeddf3a))
+
+## [2.0.0-rc.216](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.215...v2.0.0-rc.216) (2025-08-06)
+
+
+### Bug Fixes
+
+* generate query plans for subscriptions ([#1260](https://github.com/wundergraph/graphql-go-tools/issues/1260)) ([560a89d](https://github.com/wundergraph/graphql-go-tools/commit/560a89d9f8d3797cd93c1fea136df5ab54b5bd0e))
+
+## [2.0.0-rc.215](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.214...v2.0.0-rc.215) (2025-07-31)
+
+
+### Bug Fixes
+
+* make propagated operation names unique ([#1256](https://github.com/wundergraph/graphql-go-tools/issues/1256)) ([c2be87e](https://github.com/wundergraph/graphql-go-tools/commit/c2be87e80965697d51fb162d3614db7d135dbd8f))
+
+## [2.0.0-rc.214](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.213...v2.0.0-rc.214) (2025-07-29)
+
+
+### Bug Fixes
+
+* handle nullable and nested argument lists properly ([#1254](https://github.com/wundergraph/graphql-go-tools/issues/1254)) ([67af556](https://github.com/wundergraph/graphql-go-tools/commit/67af5568bff4da601bbbb9082158087223581d6d))
+
+## [2.0.0-rc.213](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.212...v2.0.0-rc.213) (2025-07-28)
+
+
+### Bug Fixes
+
+* fix parent node jump lookup ([#1252](https://github.com/wundergraph/graphql-go-tools/issues/1252)) ([9fb01be](https://github.com/wundergraph/graphql-go-tools/commit/9fb01be8188dcab52feb0877ab8f2a023143cb51))
+
+## [2.0.0-rc.212](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.211...v2.0.0-rc.212) (2025-07-28)
+
+
+### Bug Fixes
+
+* handle null only for outer list ([#1250](https://github.com/wundergraph/graphql-go-tools/issues/1250)) ([0e055a4](https://github.com/wundergraph/graphql-go-tools/commit/0e055a447f4201f5b8c24e9786be71f6265457b6))
+
+## [2.0.0-rc.211](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.210...v2.0.0-rc.211) (2025-07-28)
+
+
+### Features
+
+* redesign handling for lists in gRPC ([#1246](https://github.com/wundergraph/graphql-go-tools/issues/1246)) ([a06c9db](https://github.com/wundergraph/graphql-go-tools/commit/a06c9db0f2ac6558ef957885784e25e127ff40ae))
+
+
+### Bug Fixes
+
+* disable minifier for gRPC datasource ([#1249](https://github.com/wundergraph/graphql-go-tools/issues/1249)) ([9a26e5c](https://github.com/wundergraph/graphql-go-tools/commit/9a26e5cb4861b3a5f3adfa942970d4e42c05d718))
+* test v2 benchmarks on ci ([#1238](https://github.com/wundergraph/graphql-go-tools/issues/1238)) ([d9cfb21](https://github.com/wundergraph/graphql-go-tools/commit/d9cfb2144387ff2e42e5b620ec93abcb11ff314b))
+
+## [2.0.0-rc.210](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.209...v2.0.0-rc.210) (2025-07-22)
+
+
+### Bug Fixes
+
+* planner fixes for parent entity jumps and unique nodes selections ([#1230](https://github.com/wundergraph/graphql-go-tools/issues/1230)) ([1a7ed16](https://github.com/wundergraph/graphql-go-tools/commit/1a7ed16008de28adebdb0fb3485ba2ea5205d8e8))
+
+## [2.0.0-rc.209](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.208...v2.0.0-rc.209) (2025-07-22)
+
+
+### Bug Fixes
+
+* merge inline fragment and field selections together ([#1240](https://github.com/wundergraph/graphql-go-tools/issues/1240)) ([99f2b32](https://github.com/wundergraph/graphql-go-tools/commit/99f2b321990591f51a1dd0f84e6b3696fb457d33))
+
+## [2.0.0-rc.208](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.207...v2.0.0-rc.208) (2025-07-18)
+
+
+### Features
+
+* add depth limit to parser ([#1241](https://github.com/wundergraph/graphql-go-tools/issues/1241)) ([7de2a2e](https://github.com/wundergraph/graphql-go-tools/commit/7de2a2e6302e06f52e869d71546fe60811b89b50))
+
+
+### Bug Fixes
+
+* check that object claims to implement interface ([#1235](https://github.com/wundergraph/graphql-go-tools/issues/1235)) ([5afbc68](https://github.com/wundergraph/graphql-go-tools/commit/5afbc6821a858fac7ce2d3d62559aed196477bb3))
+* use NodeFragmentIsAllowedOnNode to check fragmentSpread ([#1223](https://github.com/wundergraph/graphql-go-tools/issues/1223)) ([e448c81](https://github.com/wundergraph/graphql-go-tools/commit/e448c81e19a0b9955a449dbcdd207f60a7883994))
+
+## [2.0.0-rc.207](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.206...v2.0.0-rc.207) (2025-07-15)
+
+
+### Bug Fixes
+
+* fix merging fetches and add dependencies update ([#1232](https://github.com/wundergraph/graphql-go-tools/issues/1232)) ([c91d59e](https://github.com/wundergraph/graphql-go-tools/commit/c91d59eeeb9ac09f84806b9d3af903f5d25f064d))
+
+## [2.0.0-rc.206](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.205...v2.0.0-rc.206) (2025-07-15)
+
+
+### Bug Fixes
+
+* allow multiple aliases ([#1231](https://github.com/wundergraph/graphql-go-tools/issues/1231)) ([01d91e2](https://github.com/wundergraph/graphql-go-tools/commit/01d91e2b882b000d95a08ac4e96d97d95f1e3a9d))
+
+## [2.0.0-rc.205](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.204...v2.0.0-rc.205) (2025-07-14)
+
+
+### Bug Fixes
+
+* missing field refs in union types ([#1228](https://github.com/wundergraph/graphql-go-tools/issues/1228)) ([57e1d38](https://github.com/wundergraph/graphql-go-tools/commit/57e1d38955f14df4e39f9f139a31a40a6d6e4659))
+* return empty list for nullable lists ([#1225](https://github.com/wundergraph/graphql-go-tools/issues/1225)) ([1166a10](https://github.com/wundergraph/graphql-go-tools/commit/1166a10a5da4151af5a7abeea7bee45d63d71349))
+
+## [2.0.0-rc.204](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.203...v2.0.0-rc.204) (2025-07-10)
+
+
+### Features
+
+* support nullable base types ([#1212](https://github.com/wundergraph/graphql-go-tools/issues/1212)) ([b45b92c](https://github.com/wundergraph/graphql-go-tools/commit/b45b92c37854778851740bcbd9d0562641b4593b))
+
+## [2.0.0-rc.203](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.202...v2.0.0-rc.203) (2025-07-10)
+
+
+### Features
+
+* option to allow all error extensions ([#1217](https://github.com/wundergraph/graphql-go-tools/issues/1217)) ([b2e6575](https://github.com/wundergraph/graphql-go-tools/commit/b2e65752b043151c5a21f0dfbebe6823c4b96f0f))
+
+## [2.0.0-rc.202](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.201...v2.0.0-rc.202) (2025-07-09)
+
+
+### Bug Fixes
+
+* return parsing error for empty selection sets ([#1220](https://github.com/wundergraph/graphql-go-tools/issues/1220)) ([726c0d2](https://github.com/wundergraph/graphql-go-tools/commit/726c0d203edba1a863444cbbe70ccec2092d8416))
+
+## [2.0.0-rc.201](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.200...v2.0.0-rc.201) (2025-07-09)
+
+
+### Features
+
+* use a method to get response body details on demand ([#1218](https://github.com/wundergraph/graphql-go-tools/issues/1218)) ([3964286](https://github.com/wundergraph/graphql-go-tools/commit/39642862866d4a94691de10574834f64a66fb2a3))
+
+## [2.0.0-rc.200](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.199...v2.0.0-rc.200) (2025-07-08)
+
+
+### Features
+
+* implement resolving fetch dependencies ([#1216](https://github.com/wundergraph/graphql-go-tools/issues/1216)) ([ca9ebaa](https://github.com/wundergraph/graphql-go-tools/commit/ca9ebaa7784b5da89c78239f83a1c3eba909b838))
+
+
+### Bug Fixes
+
+* use existing files in BenchmarkMinify ([#1214](https://github.com/wundergraph/graphql-go-tools/issues/1214)) ([0083b78](https://github.com/wundergraph/graphql-go-tools/commit/0083b7880bbcb20da4f26ca509e45cb48eedaaf1))
+* use int in netpoll's BenchmarkSocketFdReflect ([#1213](https://github.com/wundergraph/graphql-go-tools/issues/1213)) ([35f3175](https://github.com/wundergraph/graphql-go-tools/commit/35f31751d5971c491c98fa3b223fba846729a3fa))
+
+## [2.0.0-rc.199](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.198...v2.0.0-rc.199) (2025-07-07)
+
+
+### Features
+
+* add support for aliases ([#1209](https://github.com/wundergraph/graphql-go-tools/issues/1209)) ([9223351](https://github.com/wundergraph/graphql-go-tools/commit/9223351ca9530e3738bfac794de108bbbac134c0))
+
+
+### Bug Fixes
+
+* do not trim whitespaces around non-block strings ([#1211](https://github.com/wundergraph/graphql-go-tools/issues/1211)) ([6f5046b](https://github.com/wundergraph/graphql-go-tools/commit/6f5046b8b1cdbd3d54154d55cc049e45404905aa))
+
+## [2.0.0-rc.198](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.197...v2.0.0-rc.198) (2025-07-04)
+
+
+### Features
+
+* add support for composite types ([#1197](https://github.com/wundergraph/graphql-go-tools/issues/1197)) ([e9b9f19](https://github.com/wundergraph/graphql-go-tools/commit/e9b9f193b749089eda7fa9126e93407c2a4dbd7f))
+
+
+### Bug Fixes
+
+* fix collecting representation for fetches scoped to concrete types ([#1200](https://github.com/wundergraph/graphql-go-tools/issues/1200)) ([bcf547d](https://github.com/wundergraph/graphql-go-tools/commit/bcf547d8c5f93fe6caf1c90b8f3049c94d1fed23))
+
+## [2.0.0-rc.197](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.196...v2.0.0-rc.197) (2025-07-03)
+
+
+### Features
+
+* status code derived fallback errors ([#1198](https://github.com/wundergraph/graphql-go-tools/issues/1198)) ([aa1c7ef](https://github.com/wundergraph/graphql-go-tools/commit/aa1c7efcb22a92c63e22b5de71905fdc327c6875))
+
+## [2.0.0-rc.196](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.195...v2.0.0-rc.196) (2025-07-02)
+
+
+### Features
+
+* pass in response body ([#1203](https://github.com/wundergraph/graphql-go-tools/issues/1203)) ([ef03374](https://github.com/wundergraph/graphql-go-tools/commit/ef03374352bff7715b430409d20a55c9f456405a))
+
+## [2.0.0-rc.195](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.194...v2.0.0-rc.195) (2025-07-02)
+
+
+### Bug Fixes
+
+* fix checking presence of type mapping to interface object ([#1201](https://github.com/wundergraph/graphql-go-tools/issues/1201)) ([0a849ee](https://github.com/wundergraph/graphql-go-tools/commit/0a849ee561dd4abac38f870ca61299ca93672acd))
+
+## [2.0.0-rc.194](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.193...v2.0.0-rc.194) (2025-06-28)
+
+
+### Bug Fixes
+
+* preserve fields selections during object selection rewrite ([#1194](https://github.com/wundergraph/graphql-go-tools/issues/1194)) ([1c9d4d2](https://github.com/wundergraph/graphql-go-tools/commit/1c9d4d2be548da6879f5b7b26d67b5d0ba52df93))
+
+## [2.0.0-rc.193](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.192...v2.0.0-rc.193) (2025-06-27)
+
+
+### Bug Fixes
+
+* fix rewriting object selections with nested abstract fragments ([#1192](https://github.com/wundergraph/graphql-go-tools/issues/1192)) ([a22b89c](https://github.com/wundergraph/graphql-go-tools/commit/a22b89c4379db027e3e5be99670cc14d037c1894))
+
+## [2.0.0-rc.192](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.191...v2.0.0-rc.192) (2025-06-19)
+
+
+### Bug Fixes
+
+* don't panic when calling QueryPlan on FetchTreeNode if `includeQueryPlans` is false ([#1189](https://github.com/wundergraph/graphql-go-tools/issues/1189)) ([f69a3a6](https://github.com/wundergraph/graphql-go-tools/commit/f69a3a6270c4043904d188800a35796dffd4ba43))
+
+## [2.0.0-rc.191](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.190...v2.0.0-rc.191) (2025-06-18)
+
+
+### Bug Fixes
+
+* don't send complete when request/resolver context is done ([#1187](https://github.com/wundergraph/graphql-go-tools/issues/1187)) ([9b51ad6](https://github.com/wundergraph/graphql-go-tools/commit/9b51ad6632c28a985b1f67c97ab1e68647a5f93d))
+
+## [2.0.0-rc.190](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.189...v2.0.0-rc.190) (2025-06-13)
+
+
+### Bug Fixes
+
+* handling nested abstract fragments in abstract fragments ([#1184](https://github.com/wundergraph/graphql-go-tools/issues/1184)) ([c3321d3](https://github.com/wundergraph/graphql-go-tools/commit/c3321d3cd72b63fbf5d7d949d70fd6dfeb73e2e1))
+
+## [2.0.0-rc.189](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.188...v2.0.0-rc.189) (2025-06-12)
+
+
+### Features
+
+* expose parsed data in RenderFieldValue ([#1182](https://github.com/wundergraph/graphql-go-tools/issues/1182)) ([893c536](https://github.com/wundergraph/graphql-go-tools/commit/893c5366239362af68e0258c5987e7be24d286cb))
+
+
+### Bug Fixes
+
+* prefer websocket tws when negotiate graphql websocket protocol ([#1185](https://github.com/wundergraph/graphql-go-tools/issues/1185)) ([0787d7c](https://github.com/wundergraph/graphql-go-tools/commit/0787d7c8431fe840396e7b5b8e2aa47f1cd94ead))
+
+## [2.0.0-rc.188](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.187...v2.0.0-rc.188) (2025-06-11)
+
+
+### Features
+
+* improve apollo gateway compatible field selection validation ([#1169](https://github.com/wundergraph/graphql-go-tools/issues/1169)) ([8c1a063](https://github.com/wundergraph/graphql-go-tools/commit/8c1a06302309b5c3ad36f908cc8acbbc0bfafda6))
+
+## [2.0.0-rc.187](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.186...v2.0.0-rc.187) (2025-06-10)
+
+
+### Bug Fixes
+
+* support different kinds of close, correct client unsubscribe behaviour ([#1174](https://github.com/wundergraph/graphql-go-tools/issues/1174)) ([b6de322](https://github.com/wundergraph/graphql-go-tools/commit/b6de32263b69902c1f687b7b3fbf89e90df85cd2))
+
+## [2.0.0-rc.186](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.185...v2.0.0-rc.186) (2025-06-05)
+
+
+### Bug Fixes
+
+* upgrade golang/net version and dependencies ([#1173](https://github.com/wundergraph/graphql-go-tools/issues/1173)) ([1e889dd](https://github.com/wundergraph/graphql-go-tools/commit/1e889dd3d79385db80f2a66fec70c9aef3423d76))
+
+## [2.0.0-rc.185](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.184...v2.0.0-rc.185) (2025-06-04)
+
+
+### Features
+
+* differentiate between complete and close event types ([#1158](https://github.com/wundergraph/graphql-go-tools/issues/1158)) ([79f3f41](https://github.com/wundergraph/graphql-go-tools/commit/79f3f411b4101b0cdb29c2e5f075b8efe14fa6d8))
+
+## [2.0.0-rc.184](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.183...v2.0.0-rc.184) (2025-06-03)
+
+
+### Features
+
+* add custom field renderer to resolvable ([#1166](https://github.com/wundergraph/graphql-go-tools/issues/1166)) ([eaa5e60](https://github.com/wundergraph/graphql-go-tools/commit/eaa5e60cd1687593d538f33a914d0a6c1acace9b))
+
+
+### Bug Fixes
+
+* usage of unions fragments in union/object selection set ([#1165](https://github.com/wundergraph/graphql-go-tools/issues/1165)) ([c78c7e8](https://github.com/wundergraph/graphql-go-tools/commit/c78c7e828bef8fd80dbd4a3b47bd7ec910a5eb0b))
+
+## [2.0.0-rc.183](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.182...v2.0.0-rc.183) (2025-05-28)
+
+
+### Features
+
+* use new negation regex matching for matching connections ([#1161](https://github.com/wundergraph/graphql-go-tools/issues/1161)) ([4f2fe65](https://github.com/wundergraph/graphql-go-tools/commit/4f2fe65ffcf51346b7907626767e5472f56c1b11))
+
+## [2.0.0-rc.182](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.181...v2.0.0-rc.182) (2025-05-27)
+
+
+### Bug Fixes
+
+* handle scalar values for lists ([#1155](https://github.com/wundergraph/graphql-go-tools/issues/1155)) ([94031e5](https://github.com/wundergraph/graphql-go-tools/commit/94031e5a1fa20a15b0d01a5a7f94c7dffec122f9))
+
+## [2.0.0-rc.181](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.180...v2.0.0-rc.181) (2025-05-23)
+
+
+### Bug Fixes
+
+* do not add array field when node was skipped ([#1156](https://github.com/wundergraph/graphql-go-tools/issues/1156)) ([61dc0b1](https://github.com/wundergraph/graphql-go-tools/commit/61dc0b19b639b1d321c2bce12cad63ec70925a5f))
+
+## [2.0.0-rc.180](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.179...v2.0.0-rc.180) (2025-05-20)
+
+
+### Bug Fixes
+
+* detach fetches from objects, serial mutations execution, remove fetch id from operation name ([#1150](https://github.com/wundergraph/graphql-go-tools/issues/1150)) ([d62026b](https://github.com/wundergraph/graphql-go-tools/commit/d62026b95029badee5cb68e24559201a7570c816))
+* fix response path for aliased fields ([#1153](https://github.com/wundergraph/graphql-go-tools/issues/1153)) ([b6270bd](https://github.com/wundergraph/graphql-go-tools/commit/b6270bde84f599fd6dfc32358a9aaa11a7bcbdd7))
+
+## [2.0.0-rc.179](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.178...v2.0.0-rc.179) (2025-05-19)
+
+
+### Features
+
+* implement gRPC datasource ([#1146](https://github.com/wundergraph/graphql-go-tools/issues/1146)) ([146a552](https://github.com/wundergraph/graphql-go-tools/commit/146a552419e83b350b769a5e37cceb6d3f4b59d3))
+
+
+### Bug Fixes
+
+* print indent once per level by default ([#1147](https://github.com/wundergraph/graphql-go-tools/issues/1147)) ([0f022e5](https://github.com/wundergraph/graphql-go-tools/commit/0f022e5a7443d71fa5c458485876dfaac4cf060b)), closes [#405](https://github.com/wundergraph/graphql-go-tools/issues/405)
+
+## [2.0.0-rc.178](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.177...v2.0.0-rc.178) (2025-05-06)
+
+
+### Features
+
+* add deprecated arguments support to introspection ([#1142](https://github.com/wundergraph/graphql-go-tools/issues/1142)) ([1ac2908](https://github.com/wundergraph/graphql-go-tools/commit/1ac2908ec5ab5cfb5aed17c1fee127aef098c7fc))
+
+## [2.0.0-rc.177](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.176...v2.0.0-rc.177) (2025-05-06)
+
+
+### Bug Fixes
+
+* use non aliased field name for graph coordinate ([#1143](https://github.com/wundergraph/graphql-go-tools/issues/1143)) ([a2ef742](https://github.com/wundergraph/graphql-go-tools/commit/a2ef742e9336f942702ec0cfd6d7fff32a270221))
+
+## [2.0.0-rc.176](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.175...v2.0.0-rc.176) (2025-04-30)
+
+
+### Bug Fixes
+
+* evaluate keys using order of target subgraph ([#1139](https://github.com/wundergraph/graphql-go-tools/issues/1139)) ([f358e9e](https://github.com/wundergraph/graphql-go-tools/commit/f358e9e74c16f0c372170d9cde82decbf4991289))
+
+## [2.0.0-rc.175](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.174...v2.0.0-rc.175) (2025-04-29)
+
+
+### Features
+
+* remove intermediate buffer from ResolveGraphQLResponse ([#1137](https://github.com/wundergraph/graphql-go-tools/issues/1137)) ([9f25e6f](https://github.com/wundergraph/graphql-go-tools/commit/9f25e6fccd15fa0a847d453ebd05276c2b250721))
+
+## [2.0.0-rc.174](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.173...v2.0.0-rc.174) (2025-04-29)
+
+
+### Features
+
+* **subscriptions:** user proper frame timeout ([#1135](https://github.com/wundergraph/graphql-go-tools/issues/1135)) ([d1fbd62](https://github.com/wundergraph/graphql-go-tools/commit/d1fbd624f7af19802f736e191ba4079abbdd0a37))
+
+## [2.0.0-rc.173](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.172...v2.0.0-rc.173) (2025-04-25)
+
+
+### Bug Fixes
+
+* use proper read timeout ([#1133](https://github.com/wundergraph/graphql-go-tools/issues/1133)) ([9a8f4aa](https://github.com/wundergraph/graphql-go-tools/commit/9a8f4aa99b007cfc69022992b8cf9aa150047a54))
+
+## [2.0.0-rc.172](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.171...v2.0.0-rc.172) (2025-04-22)
+
+
+### Features
+
+* add static resolver of root operation types __typename fields ([#1128](https://github.com/wundergraph/graphql-go-tools/issues/1128)) ([3dc79f1](https://github.com/wundergraph/graphql-go-tools/commit/3dc79f18694ff83782a200f7f59541038a29655c))
+* add support of fragments in the provides directive ([ca2e6c2](https://github.com/wundergraph/graphql-go-tools/commit/ca2e6c2e4fd6f601f9e72faefc922dba9a0fc01d))
+* add support of inline fragments to representation variables builder; add typename selection to requires selection set in case it has fragments ([40e3fd9](https://github.com/wundergraph/graphql-go-tools/commit/40e3fd95c35fa2a0a46eee58c7ebdc75595e41f1))
+
+
+### Bug Fixes
+
+* add support of inline fragments in requires directive, add an alias for required fields in case of conflict ([496b7da](https://github.com/wundergraph/graphql-go-tools/commit/496b7dacb44e2e8b3c2405c70b311b325b1237ea))
+* add support of remapping representation variables paths ([204e0b6](https://github.com/wundergraph/graphql-go-tools/commit/204e0b66889b8631196c3a6abd696f5213c2bc4b))
+* allow to recheck abstract fields if they were modified by adding required fields ([b4d5fd5](https://github.com/wundergraph/graphql-go-tools/commit/b4d5fd51ce9eb13b892efb368a3b19cef2a5fc51))
+* during abstract selection rewrite collect changed paths and after rewrite update field dependencies accordingly ([a6246fd](https://github.com/wundergraph/graphql-go-tools/commit/a6246fd1bb795a4c9092dea2b912193133479db1))
+* exclude inaccesible types from possible types for interface/union ([ae1adc1](https://github.com/wundergraph/graphql-go-tools/commit/ae1adc187c0263792fe089184181416bc485fb7c))
+* rework key matching logic to support chain leapfrogging jumps ([4f12691](https://github.com/wundergraph/graphql-go-tools/commit/4f1269166baf7ea4fcca8d67f87c38eab4ce179d))
+* tune selections for root query fields and typename only selection sets ([ea3b276](https://github.com/wundergraph/graphql-go-tools/commit/ea3b276190252f798e672cf9ce46a8f611b15924))
+
+## [2.0.0-rc.171](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.170...v2.0.0-rc.171) (2025-04-22)
+
+
+### Bug Fixes
+
+* dont use completed channel in sub updater ([#1127](https://github.com/wundergraph/graphql-go-tools/issues/1127)) ([be7db2a](https://github.com/wundergraph/graphql-go-tools/commit/be7db2ae9597003c546ee5ee87e155714a9f8495))
+
+## [2.0.0-rc.170](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.169...v2.0.0-rc.170) (2025-04-17)
+
+
+### Features
+
+* operation input to MCP compatible json schema converter ([#1124](https://github.com/wundergraph/graphql-go-tools/issues/1124)) ([48cc99b](https://github.com/wundergraph/graphql-go-tools/commit/48cc99b441f851d1e0ecac2b5f4199a3e8eac94c))
+
+## [2.0.0-rc.169](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.168...v2.0.0-rc.169) (2025-04-07)
+
+
+### Bug Fixes
+
+* **websocket:** handle ping/pong correctly ([#1122](https://github.com/wundergraph/graphql-go-tools/issues/1122)) ([8001f90](https://github.com/wundergraph/graphql-go-tools/commit/8001f90d29360e87e28450ad2c8af551efbecbff))
+
+## [2.0.0-rc.168](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.167...v2.0.0-rc.168) (2025-04-01)
+
+
+### Bug Fixes
+
+* allow custom scalar values of any kind ([#1107](https://github.com/wundergraph/graphql-go-tools/issues/1107)) ([1a67689](https://github.com/wundergraph/graphql-go-tools/commit/1a67689322b86debee5aa9c8dd1dfc526a82a559))
+* get query for plan when input is not valid JSON yet ([#1120](https://github.com/wundergraph/graphql-go-tools/issues/1120)) ([69485df](https://github.com/wundergraph/graphql-go-tools/commit/69485dfe7a76f77902595512f8ce6578cdc073f5))
+* set proper write / read timeouts ([#1113](https://github.com/wundergraph/graphql-go-tools/issues/1113)) ([e717013](https://github.com/wundergraph/graphql-go-tools/commit/e717013750e65c4a8e513dfd6b5d4ae5e523dbf7))
+
+## [2.0.0-rc.167](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.166...v2.0.0-rc.167) (2025-03-26)
+
+
+### Features
+
+* reset skipFieldsRefs ([#1117](https://github.com/wundergraph/graphql-go-tools/issues/1117)) ([7527cff](https://github.com/wundergraph/graphql-go-tools/commit/7527cff29f41755ea341faa235e8f92781cea936))
+
+## [2.0.0-rc.166](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.165...v2.0.0-rc.166) (2025-03-25)
+
+
+### Bug Fixes
+
+* catch an error on provides with fragments ([#1115](https://github.com/wundergraph/graphql-go-tools/issues/1115)) ([f4bb0af](https://github.com/wundergraph/graphql-go-tools/commit/f4bb0afa4b0124eff279635f7a0dc7d65d2e8554))
+
+## [2.0.0-rc.165](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.164...v2.0.0-rc.165) (2025-03-14)
+
+
+### Features
+
+* add max concurrency for data source collectors ([#1111](https://github.com/wundergraph/graphql-go-tools/issues/1111)) ([bae36b2](https://github.com/wundergraph/graphql-go-tools/commit/bae36b241bcb72619af8b76f8410c7796e018a72))
+
+## [2.0.0-rc.164](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.163...v2.0.0-rc.164) (2025-03-13)
+
+
+### Features
+
+* add error code for authorization errors ([#1109](https://github.com/wundergraph/graphql-go-tools/issues/1109)) ([54e744e](https://github.com/wundergraph/graphql-go-tools/commit/54e744e9843b87e02c3251c8d5262e55c588e89a))
+
+## [2.0.0-rc.163](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.162...v2.0.0-rc.163) (2025-03-04)
+
+
+### Bug Fixes
+
+* invalid enum values with value completion flag ([#1104](https://github.com/wundergraph/graphql-go-tools/issues/1104)) ([714fb3e](https://github.com/wundergraph/graphql-go-tools/commit/714fb3e098c795f23ee6273b33af3524de67c4b0))
+
+## [2.0.0-rc.162](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.161...v2.0.0-rc.162) (2025-03-03)
+
+
+### Bug Fixes
+
+* **subscription:** never try to send on blocked channel when subscription was completed ([#1100](https://github.com/wundergraph/graphql-go-tools/issues/1100)) ([1a1bb20](https://github.com/wundergraph/graphql-go-tools/commit/1a1bb20e4cc02888ff9780f0e38c27b09774e9d7))
+
+## [2.0.0-rc.161](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.160...v2.0.0-rc.161) (2025-02-28)
+
+
+### Bug Fixes
+
+* fix validation of variables used in nested fields of type list of an input object ([#1099](https://github.com/wundergraph/graphql-go-tools/issues/1099)) ([d74dc37](https://github.com/wundergraph/graphql-go-tools/commit/d74dc37ea452f8e1a2d63a57ce4cab52c1b7ec66)), closes [#1096](https://github.com/wundergraph/graphql-go-tools/issues/1096)
+
+## [2.0.0-rc.160](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.159...v2.0.0-rc.160) (2025-02-27)
+
+
+### Bug Fixes
+
+* **subscriptions:** skip event after worker shutdown ([#1094](https://github.com/wundergraph/graphql-go-tools/issues/1094)) ([c30d9d9](https://github.com/wundergraph/graphql-go-tools/commit/c30d9d9f4718266ffbe41b44e6d6c86b269f6810))
+
+## [2.0.0-rc.159](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.158...v2.0.0-rc.159) (2025-02-26)
+
+
+### Features
+
+* support files in nested variable input ([#1095](https://github.com/wundergraph/graphql-go-tools/issues/1095)) ([88c583a](https://github.com/wundergraph/graphql-go-tools/commit/88c583ac7447a6a204b67857823d847ce66550c8))
+
+## [2.0.0-rc.158](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.157...v2.0.0-rc.158) (2025-02-22)
+
+
+### Bug Fixes
+
+* fix node selections do not select external parents of unique node ([#1087](https://github.com/wundergraph/graphql-go-tools/issues/1087)) ([6adc0f6](https://github.com/wundergraph/graphql-go-tools/commit/6adc0f69b40d1aa6bf8bd660cfdea6327b93ce1b))
+
+## [2.0.0-rc.157](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.156...v2.0.0-rc.157) (2025-02-20)
+
+
+### Features
+
+* **engine:** mutex free subscription handling ([#1076](https://github.com/wundergraph/graphql-go-tools/issues/1076)) ([21be4ab](https://github.com/wundergraph/graphql-go-tools/commit/21be4ab2fff9962d6f56b2bcb6d51b70a2651381))
+
+
+### Bug Fixes
+
+* fix values validation list compatibility check ([#1082](https://github.com/wundergraph/graphql-go-tools/issues/1082)) ([541be0d](https://github.com/wundergraph/graphql-go-tools/commit/541be0d07d200c79235c1af9b9c6cdf2f4870d65))
+
+## [2.0.0-rc.156](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.155...v2.0.0-rc.156) (2025-02-18)
+
+
+### Features
+
+* apollo-router-like non-ok http status errors ([#1072](https://github.com/wundergraph/graphql-go-tools/issues/1072)) ([e685c29](https://github.com/wundergraph/graphql-go-tools/commit/e685c29331c0d1879ff8e099d4441047fbddf054))
+
+## [2.0.0-rc.155](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.154...v2.0.0-rc.155) (2025-02-15)
+
+
+### Bug Fixes
+
+* deadlock when waiting on inflight events of a trigger ([#1073](https://github.com/wundergraph/graphql-go-tools/issues/1073)) ([8a2b33c](https://github.com/wundergraph/graphql-go-tools/commit/8a2b33c289a921f53518e795a205fba9d4bd7058))
+
+## [2.0.0-rc.154](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.153...v2.0.0-rc.154) (2025-02-14)
+
+
+### Bug Fixes
+
+* use correct compatibility spelling ([#1070](https://github.com/wundergraph/graphql-go-tools/issues/1070)) ([9b3d93b](https://github.com/wundergraph/graphql-go-tools/commit/9b3d93b072169f84e41977d9091b1415c33b150d))
+
+## [2.0.0-rc.153](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.152...v2.0.0-rc.153) (2025-02-14)
+
+
+### Features
+
+* add apollo router compat flag for invalid variable rendering ([#1067](https://github.com/wundergraph/graphql-go-tools/issues/1067)) ([e87961f](https://github.com/wundergraph/graphql-go-tools/commit/e87961fcd13f4dde76432745c564950f56f5045d))
+
+## [2.0.0-rc.152](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.151...v2.0.0-rc.152) (2025-02-13)
+
+
+### Bug Fixes
+
+* fix printing object value with optional fields ([#1065](https://github.com/wundergraph/graphql-go-tools/issues/1065)) ([5730d72](https://github.com/wundergraph/graphql-go-tools/commit/5730d728f78dc64a10c00eb1de1cd00292ce7dd2))
+
+## [2.0.0-rc.151](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.150...v2.0.0-rc.151) (2025-02-12)
+
+
+### Bug Fixes
+
+* get typename from upstream schema in abstract field rewriter ([#1062](https://github.com/wundergraph/graphql-go-tools/issues/1062)) ([59f0a51](https://github.com/wundergraph/graphql-go-tools/commit/59f0a5151b1a63d19c4655f016ca8316e6a5d36f))
+
+## [2.0.0-rc.150](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.149...v2.0.0-rc.150) (2025-02-11)
+
+
+### Bug Fixes
+
+* interface objects ([#1055](https://github.com/wundergraph/graphql-go-tools/issues/1055)) ([858d929](https://github.com/wundergraph/graphql-go-tools/commit/858d92992680bd8652dde2d3bdd036dbc40608c5))
+* re-walking operation on stopped walker after rewriting abstract selection set; prevent adding __typename field suggestion for the datasource which do not have a union defined ([cf50a60](https://github.com/wundergraph/graphql-go-tools/commit/cf50a60e520beeabb91b2bd99912dbe983634696))
+* use of arguments on interface object when jumping from type to interface object ([850bd6c](https://github.com/wundergraph/graphql-go-tools/commit/850bd6ceeef4d01a0780eb5ac309eba3604cc871))
+* use of arguments on jump to interface object from concrete type ([#1061](https://github.com/wundergraph/graphql-go-tools/issues/1061)) ([9f7180e](https://github.com/wundergraph/graphql-go-tools/commit/9f7180e9193b4be1f5f72a388f5e1f37f120fc39))
+
+## [2.0.0-rc.149](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.148...v2.0.0-rc.149) (2025-02-07)
+
+
+### Bug Fixes
+
+* extracting object input with optional variable values ([#1056](https://github.com/wundergraph/graphql-go-tools/issues/1056)) ([3325eac](https://github.com/wundergraph/graphql-go-tools/commit/3325eac3f1dc70069e8057972bf1da5f7324402a))
+
+## [2.0.0-rc.148](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.147...v2.0.0-rc.148) (2025-02-07)
+
+
+### Bug Fixes
+
+* populating nodes selection for the external path used in a key ([#1053](https://github.com/wundergraph/graphql-go-tools/issues/1053)) ([1cfc6f5](https://github.com/wundergraph/graphql-go-tools/commit/1cfc6f58b6fbe352cd8cecfa8ebc2fd48b7caccd))
+
+## [2.0.0-rc.147](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.146...v2.0.0-rc.147) (2025-02-03)
+
+
+### Bug Fixes
+
+* wait for updates in flight to be delivered before shutting down the trigger ([#1048](https://github.com/wundergraph/graphql-go-tools/issues/1048)) ([2b44f78](https://github.com/wundergraph/graphql-go-tools/commit/2b44f7868029062a8e92fcde90febcfcd285520b))
+
+## [2.0.0-rc.146](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.145...v2.0.0-rc.146) (2025-01-29)
+
+
+### Bug Fixes
+
+* heartbeat go routine gone rogue ([#1030](https://github.com/wundergraph/graphql-go-tools/issues/1030)) ([b7e96dd](https://github.com/wundergraph/graphql-go-tools/commit/b7e96ddf45ee87aae91b3d88ffa6910dc7460718))
+
+## [2.0.0-rc.145](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.144...v2.0.0-rc.145) (2025-01-27)
+
+
+### Features
+
+* add normalizedQuery to query plan and request info to trace ([#1045](https://github.com/wundergraph/graphql-go-tools/issues/1045)) ([e75a1dd](https://github.com/wundergraph/graphql-go-tools/commit/e75a1dd24d5255b6cc990269c5c7922f851f4fc1))
+
+## [2.0.0-rc.144](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.143...v2.0.0-rc.144) (2025-01-23)
+
+
+### Bug Fixes
+
+* remove semaphore from ResolveGraphQLSubscription ([#1043](https://github.com/wundergraph/graphql-go-tools/issues/1043)) ([76d644e](https://github.com/wundergraph/graphql-go-tools/commit/76d644eb2316bfc71ae3a09cd4a5614998f26f43))
+
+## [2.0.0-rc.143](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.142...v2.0.0-rc.143) (2025-01-23)
+
+
+### Bug Fixes
+
+* delete leftover heartbeat connections ([#1033](https://github.com/wundergraph/graphql-go-tools/issues/1033)) ([f7492d3](https://github.com/wundergraph/graphql-go-tools/commit/f7492d39b044f4901f695fb1e7718c9fe912504c))
+
+## [2.0.0-rc.142](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.141...v2.0.0-rc.142) (2025-01-19)
+
+
+### Bug Fixes
+
+* do not remap variable with Upload type ([#1040](https://github.com/wundergraph/graphql-go-tools/issues/1040)) ([d184d17](https://github.com/wundergraph/graphql-go-tools/commit/d184d174622ec25464915a318122ec99ef53a20b))
+
+## [2.0.0-rc.141](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.140...v2.0.0-rc.141) (2025-01-19)
+
+
+### Bug Fixes
+
+* fix files upload remap ([#1038](https://github.com/wundergraph/graphql-go-tools/issues/1038)) ([09a2235](https://github.com/wundergraph/graphql-go-tools/commit/09a223574869ded8123a2464bd99af15523eb68a))
+
+## [2.0.0-rc.140](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.139...v2.0.0-rc.140) (2025-01-19)
+
+
+### Features
+
+* implement variables mapper ([#1034](https://github.com/wundergraph/graphql-go-tools/issues/1034)) ([b020295](https://github.com/wundergraph/graphql-go-tools/commit/b02029576746bf5459fa1f00d04146308852ad73))
+
+## [2.0.0-rc.139](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.138...v2.0.0-rc.139) (2025-01-08)
+
+
+### Features
+
+* add extensions.code to rate limiting error ([#1027](https://github.com/wundergraph/graphql-go-tools/issues/1027)) ([9423458](https://github.com/wundergraph/graphql-go-tools/commit/9423458b476545e417d7606f6371ce621b725674))
+
+## [2.0.0-rc.138](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.137...v2.0.0-rc.138) (2025-01-03)
+
+
+### Features
+
+* add an option to omit variables content in the variables validator error messages ([#934](https://github.com/wundergraph/graphql-go-tools/issues/934)) ([369e031](https://github.com/wundergraph/graphql-go-tools/commit/369e031037f9c09c66b98285686c2ecb7362da95))
+* add error cases when subgraph response cannot be merged ([#1025](https://github.com/wundergraph/graphql-go-tools/issues/1025)) ([c4f2f44](https://github.com/wundergraph/graphql-go-tools/commit/c4f2f44fc25a62fb2e8b3e82575ecd568036b59c))
+
+## [2.0.0-rc.137](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.136...v2.0.0-rc.137) (2024-12-30)
+
+
+### Features
+
+* upgrade go to 1.23 ([#1020](https://github.com/wundergraph/graphql-go-tools/issues/1020)) ([ba20971](https://github.com/wundergraph/graphql-go-tools/commit/ba209713de5a98bff3b2778090fac66a0d4ece1e))
+
+
+### Bug Fixes
+
+* **astprinter:** implement transitive interface output ([#1021](https://github.com/wundergraph/graphql-go-tools/issues/1021)) ([1b7bac3](https://github.com/wundergraph/graphql-go-tools/commit/1b7bac3e96e0a6ce4563b4a4fe671a4073338128)), closes [#1018](https://github.com/wundergraph/graphql-go-tools/issues/1018)
+
+## [2.0.0-rc.136](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.135...v2.0.0-rc.136) (2024-12-16)
+
+
+### Bug Fixes
+
+* set request in hook context before send request, in case of error ([#1016](https://github.com/wundergraph/graphql-go-tools/issues/1016)) ([e41bdef](https://github.com/wundergraph/graphql-go-tools/commit/e41bdef9779aae6bba3ac52b39f7dd545241e4ce))
+
+## [2.0.0-rc.135](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.134...v2.0.0-rc.135) (2024-12-13)
+
+
+### Features
+
+* add ConsumerInactiveThreshold to NatsStreamConfiguration ([#1014](https://github.com/wundergraph/graphql-go-tools/issues/1014)) ([7d66579](https://github.com/wundergraph/graphql-go-tools/commit/7d66579b53d831a1b543f9ad20239d1fced303ab))
+
+## [2.0.0-rc.134](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.133...v2.0.0-rc.134) (2024-12-11)
+
+
+### Bug Fixes
+
+* array merging logic ([abaa939](https://github.com/wundergraph/graphql-go-tools/commit/abaa939544c5c9ef954b68c7c7ceae37b304c6bb))
+* array merging logic ([6bb4cb5](https://github.com/wundergraph/graphql-go-tools/commit/6bb4cb5eff53a7591a81392ba764edc7a81032d5))
+* upgrade astjson, add deprecated hint on old package ([#1012](https://github.com/wundergraph/graphql-go-tools/issues/1012)) ([1f7ad31](https://github.com/wundergraph/graphql-go-tools/commit/1f7ad3163a891216b28e780640f2b8044be6d4aa))
+
+## [2.0.0-rc.133](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.132...v2.0.0-rc.133) (2024-12-11)
+
+
+### Features
+
+* query plan for subscriptions ([#1008](https://github.com/wundergraph/graphql-go-tools/issues/1008)) ([34cc4fa](https://github.com/wundergraph/graphql-go-tools/commit/34cc4fa864ec9dd8f99c4a1d79814062847ba45b))
+
+
+### Bug Fixes
+
+* array merging logic ([abaa939](https://github.com/wundergraph/graphql-go-tools/commit/abaa939544c5c9ef954b68c7c7ceae37b304c6bb))
+* array merging logic ([6bb4cb5](https://github.com/wundergraph/graphql-go-tools/commit/6bb4cb5eff53a7591a81392ba764edc7a81032d5))
+* upgrade astjson, add deprecated hint on old package ([#1012](https://github.com/wundergraph/graphql-go-tools/issues/1012)) ([1f7ad31](https://github.com/wundergraph/graphql-go-tools/commit/1f7ad3163a891216b28e780640f2b8044be6d4aa))
+
+## [2.0.0-rc.132](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.131...v2.0.0-rc.132) (2024-12-05)
+
+
+### Features
+
+* make multipart heartbeat configurable ([#1006](https://github.com/wundergraph/graphql-go-tools/issues/1006)) ([7675b4b](https://github.com/wundergraph/graphql-go-tools/commit/7675b4bbc23f815affb870c831747a5144176f0d))
+
+## [2.0.0-rc.131](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.130...v2.0.0-rc.131) (2024-12-02)
+
+
+### Features
+
+* add http datasource onfinished hook  ([#1001](https://github.com/wundergraph/graphql-go-tools/issues/1001)) ([5d14a22](https://github.com/wundergraph/graphql-go-tools/commit/5d14a2233445fe02bc4afe92a06ad1954fc6f33a))
+
+## [2.0.0-rc.130](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.129...v2.0.0-rc.130) (2024-12-02)
+
+
+### Features
+
+* execute subscription writes on main goroutine in synchronous resolve subscriptions ([acdaf47](https://github.com/wundergraph/graphql-go-tools/commit/acdaf47598762aa20712abd4eb38250bb10cfd33))
+
+## [2.0.0-rc.129](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.128...v2.0.0-rc.129) (2024-11-27)
+
+
+### Bug Fixes
+
+* sanitize operation name ([#999](https://github.com/wundergraph/graphql-go-tools/issues/999)) ([344902a](https://github.com/wundergraph/graphql-go-tools/commit/344902a8b66ddfdbd50b2afacbfd73d63aa1a1fb))
+
+## [2.0.0-rc.128](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.127...v2.0.0-rc.128) (2024-11-25)
+
+
+### Features
+
+* propagate operation name ([#993](https://github.com/wundergraph/graphql-go-tools/issues/993)) ([fe24f2b](https://github.com/wundergraph/graphql-go-tools/commit/fe24f2bfd5de1af07d26665f25600738b9355c6e))
+
+## [2.0.0-rc.127](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.126...v2.0.0-rc.127) (2024-11-19)
+
+
+### Bug Fixes
+
+* **netpoll:** obtain fd correctly when dealing with tls.Conn ([#991](https://github.com/wundergraph/graphql-go-tools/issues/991)) ([7aa57f2](https://github.com/wundergraph/graphql-go-tools/commit/7aa57f2b964720ca26e67605eaed61b29eb93560))
+
+## [2.0.0-rc.126](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.125...v2.0.0-rc.126) (2024-11-18)
+
+
+### Bug Fixes
+
+* fix regression on removing null variables which was undefined ([#988](https://github.com/wundergraph/graphql-go-tools/issues/988)) ([06d9407](https://github.com/wundergraph/graphql-go-tools/commit/06d9407beee3cd1c210948c4ddbf2b8c0214fe75))
+
+## [2.0.0-rc.125](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.124...v2.0.0-rc.125) (2024-11-18)
+
+
+### Features
+
+* better epoll detection, allow to disable epoll ([#984](https://github.com/wundergraph/graphql-go-tools/issues/984)) ([bf93cf9](https://github.com/wundergraph/graphql-go-tools/commit/bf93cf9adc8d5abb685c580029a73328a43a96ae))
+
+## [2.0.0-rc.124](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.123...v2.0.0-rc.124) (2024-11-16)
+
+
+### Bug Fixes
+
+* **ws:** deadlock on unsubscribe when epoll disabled ([#982](https://github.com/wundergraph/graphql-go-tools/issues/982)) ([2fad683](https://github.com/wundergraph/graphql-go-tools/commit/2fad6830a3630aafbfaaedd710ae7c27e0f341ee))
+
+## [2.0.0-rc.123](https://github.com/wundergraph/graphql-go-tools/compare/v2.0.0-rc.122...v2.0.0-rc.123) (2024-11-14)
+
+
+### Bug Fixes
+
+* fix merging of response nodes of enum type ([6ea332d](https://github.com/wundergraph/graphql-go-tools/commit/6ea332de897903e19d7750dd28256d864426f9f0))
+* fix merging of response nodes of enum type ([#978](https://github.com/wundergraph/graphql-go-tools/issues/978)) ([230d188](https://github.com/wundergraph/graphql-go-tools/commit/230d1884d8f4354e091d362a3da05cc376050042))

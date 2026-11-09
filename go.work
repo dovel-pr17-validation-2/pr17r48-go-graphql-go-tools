@@ -1,0 +1,13 @@
+go 1.26.0
+
+use (
+	examples/engine
+	examples/federation
+	execution
+	tools
+	v2
+)
+
+replace github.com/tidwall/sjson => github.com/tidwall/sjson v1.0.4
+
+//replace github.com/wundergraph/astjson => ../wundergraph-projects/astjson

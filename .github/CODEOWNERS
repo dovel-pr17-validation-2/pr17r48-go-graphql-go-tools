@@ -1,0 +1,6 @@
+# Give everyone ownership for everything expections listed below
+* @wundergraph/Router
+
+# Protect the CODEOWNERS file
+/.github/CODEOWNERS @wundergraph/Owners
+

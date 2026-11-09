@@ -1,0 +1,72 @@
+// Package operationreport helps generating the errors object for a GraphQL Operation.
+package operationreport
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
+type Report struct {
+	InternalErrors []error
+	ExternalErrors []ExternalError
+}
+
+func NewReport() *Report {
+	return &Report{}
+}
+
+func (r *Report) Error() string {
+	var out strings.Builder
+	for i := range r.InternalErrors {
+		if i != 0 {
+			out.WriteString("\n")
+		}
+		out.WriteString("internal: ")
+		out.WriteString(r.InternalErrors[i].Error())
+	}
+	if out.Len() > 0 && len(r.ExternalErrors) > 0 {
+		out.WriteString("\n")
+	}
+	for i := range r.ExternalErrors {
+		if i != 0 {
+			out.WriteString("\n")
+		}
+		_, _ = fmt.Fprintf(&out, "external: %s, locations: %+v, path: %v", r.ExternalErrors[i].Message, r.ExternalErrors[i].Locations, r.ExternalErrors[i].Path)
+	}
+	return out.String()
+}
+
+func (r *Report) HasErrors() bool {
+	return len(r.InternalErrors) > 0 || len(r.ExternalErrors) > 0
+}
+
+func (r *Report) Reset() {
+	r.InternalErrors = r.InternalErrors[:0]
+	r.ExternalErrors = r.ExternalErrors[:0]
+}
+
+func (r *Report) AddInternalError(err error) {
+	r.InternalErrors = append(r.InternalErrors, err)
+}
+
+func (r *Report) AddExternalError(gqlError ExternalError) {
+	r.ExternalErrors = append(r.ExternalErrors, gqlError)
+}
+
+type FormatExternalErrorMessage func(report *Report) string
+
+func ExternalErrorMessage(err error, formatFunction FormatExternalErrorMessage) (message string, ok bool) {
+	if report, ok := errors.AsType[*Report](err); ok {
+		msg := formatFunction(report)
+		return msg, true
+	}
+	return "", false
+}
+
+func UnwrappedErrorMessage(err error) string {
+	for result := err; result != nil; result = errors.Unwrap(result) {
+		err = result
+	}
+	return err.Error()
+}

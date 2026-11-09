@@ -1,0 +1,123 @@
+// Package astvalidation implements the validation rules specified in the GraphQL specification.
+package astvalidation
+
+import (
+	"net/http"
+
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/apollocompatibility"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/ast"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/astvisitor"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/errorcodes"
+	"github.com/wundergraph/graphql-go-tools/v2/pkg/operationreport"
+)
+
+type OperationValidatorOptions struct {
+	ApolloCompatibilityFlags                   apollocompatibility.Flags
+	RelaxFieldSelectionMergingNullabilityCheck bool
+	AllowStringLiteralsForEnums                bool
+}
+
+func WithApolloCompatibilityFlags(flags apollocompatibility.Flags) Option {
+	return func(options *OperationValidatorOptions) {
+		options.ApolloCompatibilityFlags = flags
+	}
+}
+
+// WithRelaxFieldSelectionMergingNullability enables a deliberate spec deviation that allows
+// differing nullability (e.g. String! vs String) on fields in non-overlapping concrete
+// object types within inline fragments. Without this option, the validator enforces the
+// strict GraphQL spec behavior where nullability must always match.
+func WithRelaxFieldSelectionMergingNullability() Option {
+	return func(options *OperationValidatorOptions) {
+		options.RelaxFieldSelectionMergingNullabilityCheck = true
+	}
+}
+
+// WithAllowStringLiteralsForEnums enables a deliberate spec deviation that allows a string
+// literal to be used where an enum value is expected, as long as the string content matches
+// one of the enum's values (e.g. `f(arg: "VALUE1")` for `enum SomeEnum { VALUE1 }`).
+// Without this option, the validator enforces the strict GraphQL spec behavior where only
+// enum literals are valid inline values for enum types.
+func WithAllowStringLiteralsForEnums() Option {
+	return func(options *OperationValidatorOptions) {
+		options.AllowStringLiteralsForEnums = true
+	}
+}
+
+type Option func(options *OperationValidatorOptions)
+
+// DefaultOperationValidator returns a fully initialized OperationValidator with all default rules registered
+func DefaultOperationValidator(options ...Option) *OperationValidator {
+	var opts OperationValidatorOptions
+	for _, opt := range options {
+		opt(&opts)
+	}
+	validator := OperationValidator{
+		walker: astvisitor.NewWalkerWithID(48, "OperationValidator"),
+	}
+
+	if opts.ApolloCompatibilityFlags.UseGraphQLValidationFailedStatus {
+		validator.walker.OnExternalError = func(err *operationreport.ExternalError) {
+			err.ExtensionCode = errorcodes.GraphQLValidationFailed
+			err.StatusCode = http.StatusBadRequest
+		}
+	}
+
+	validator.RegisterRule(AllVariablesUsed())
+	validator.RegisterRule(AllVariableUsesDefined())
+	validator.RegisterRule(DocumentContainsExecutableOperation())
+	validator.RegisterRule(OperationNameUniqueness())
+	validator.RegisterRule(LoneAnonymousOperation())
+	validator.RegisterRule(SubscriptionSingleRootField())
+	validator.RegisterRule(FieldSelections())
+	validator.RegisterRule(FieldSelectionMerging(opts.RelaxFieldSelectionMergingNullabilityCheck))
+	validator.RegisterRule(KnownArguments())
+	validator.RegisterRule(Values(opts.AllowStringLiteralsForEnums))
+	validator.RegisterRule(ArgumentUniqueness())
+	validator.RegisterRule(RequiredArguments())
+	validator.RegisterRule(Fragments())
+	validator.RegisterRule(DirectivesAreDefined())
+	validator.RegisterRule(DirectivesAreInValidLocations())
+	validator.RegisterRule(VariableUniqueness())
+	validator.RegisterRule(DirectivesAreUniquePerLocation())
+	validator.RegisterRule(VariablesAreInputTypes())
+
+	return &validator
+}
+
+func NewOperationValidator(rules []Rule) *OperationValidator {
+	validator := OperationValidator{
+		walker: astvisitor.NewWalkerWithID(48, "OperationValidator"),
+	}
+
+	for _, rule := range rules {
+		validator.RegisterRule(rule)
+	}
+
+	return &validator
+}
+
+// OperationValidator orchestrates the validation process of Operations
+type OperationValidator struct {
+	walker astvisitor.Walker
+}
+
+// RegisterRule registers a rule to the OperationValidator
+func (o *OperationValidator) RegisterRule(rule Rule) {
+	rule(&o.walker)
+}
+
+// Validate validates the operation against the definition using the registered ruleset.
+func (o *OperationValidator) Validate(operation, definition *ast.Document, report *operationreport.Report) ValidationState {
+
+	if report == nil {
+		report = &operationreport.Report{}
+	}
+
+	o.walker.Walk(operation, definition, report)
+
+	if report.HasErrors() {
+		return Invalid
+	}
+	return Valid
+}
