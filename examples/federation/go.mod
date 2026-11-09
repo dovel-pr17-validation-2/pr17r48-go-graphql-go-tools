@@ -17,7 +17,7 @@ require (
 )
 
 require (
-	connectrpc.com/connect v1.19.2 // indirect
+	connectrpc.com/connect v1.21.1 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/bufbuild/protocompile v0.14.2-0.20260130195850-5c64bed4577e // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
