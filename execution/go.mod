@@ -24,7 +24,7 @@ require (
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 // indirect
-	connectrpc.com/connect v1.19.2 // indirect
+	connectrpc.com/connect v1.21.1 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/bufbuild/protocompile v0.14.2-0.20260130195850-5c64bed4577e // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
